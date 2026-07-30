@@ -96,6 +96,18 @@ test("lists all built-in tools", async () => {
       "get_current_time",
     ],
   );
+  assert.match(
+    result.tools.find((tool) => tool.name === "run_cmd")?.description ?? "",
+    /Prefer ls, read_file, write_file, mkdir, and delete_file/,
+  );
+  assert.match(
+    result.tools.find((tool) => tool.name === "delete_file")?.description ?? "",
+    /first stop the command or process holding it/,
+  );
+  assert.match(
+    result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
+    /multiple statements/,
+  );
 });
 
 test("writes and reads a file", async () => {
@@ -112,12 +124,32 @@ test("writes and reads a file", async () => {
   assert.equal(firstText(result), "xin chào");
 });
 
-test("calculates JavaScript math expressions", async () => {
+test("deletes files created by the filesystem tools", async () => {
+  await client.callTool({
+    name: "write_file",
+    arguments: { path: "temporary/delete-me.txt", content: "temporary" },
+  });
+  const result = await client.callTool({
+    name: "delete_file",
+    arguments: { path: "temporary/delete-me.txt" },
+  });
+
+  assert.equal(JSON.parse(firstText(result)).deleted, true);
+  await assert.rejects(
+    readFile(path.join(workspace, "temporary/delete-me.txt"), "utf8"),
+    { code: "ENOENT" },
+  );
+});
+
+test("runs JavaScript calculations without repeating the input", async () => {
+  const expression = "const base = pow(2, 10); base + log(E)";
   const result = await client.callTool({
     name: "js_calculator",
-    arguments: { expression: "pow(2, 10) + log(E)" },
+    arguments: { expression },
   });
-  assert.equal(JSON.parse(firstText(result)).result, 1025);
+  const text = firstText(result);
+  assert.equal(JSON.parse(text).result, 1025);
+  assert.equal(text.includes(expression), false);
 });
 
 test("runs commands and returns readable current time", async () => {

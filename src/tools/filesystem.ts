@@ -10,7 +10,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "ls",
     description:
-      "List files and directories at a path. Paths are relative to the server workspace unless absolute.",
+      "Preferred tool for listing files and directories; use this instead of a shell command. Paths are relative to the server workspace unless absolute.",
     inputSchema: {
       path: z.string().default(".").describe("Directory to list"),
     },
@@ -35,7 +35,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "read_file",
     description:
-      "Read a UTF-8 text file. Paths are relative to the server workspace unless absolute.",
+      "Preferred tool for reading a UTF-8 text file; use this instead of a shell command. Paths are relative to the server workspace unless absolute.",
     inputSchema: {
       path: z.string().min(1).describe("File to read"),
     },
@@ -45,7 +45,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "write_file",
     description:
-      "Write a UTF-8 text file, creating the file and missing parent directories when needed.",
+      "Preferred tool for writing a UTF-8 text file; use this instead of a shell command. Creates the file and missing parent directories when needed, and closes the file before returning.",
     inputSchema: {
       path: z.string().min(1).describe("File to write"),
       content: z.string().describe("Complete file content"),
@@ -59,7 +59,8 @@ export const filesystemTools: ToolDefinition[] = [
   },
   {
     name: "mkdir",
-    description: "Create a directory and any missing parent directories.",
+    description:
+      "Preferred tool for creating a directory and any missing parent directories; use this instead of a shell command.",
     inputSchema: {
       path: z.string().min(1).describe("Directory to create"),
     },
@@ -71,7 +72,8 @@ export const filesystemTools: ToolDefinition[] = [
   },
   {
     name: "delete_file",
-    description: "Delete one file. This tool does not delete directories.",
+    description:
+      "Preferred tool for deleting one file; use this instead of a shell command. It does not delete directories. If Windows reports that the file is in use, first stop the command or process holding it, then retry; this tool never forces an unsafe deletion.",
     inputSchema: {
       path: z.string().min(1).describe("File to delete"),
     },

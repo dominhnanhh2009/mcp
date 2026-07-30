@@ -10,6 +10,15 @@ npm install
 npm start
 ```
 
+On Windows, running through `npm.cmd` can show `Terminate batch job (Y/N)?`
+after Ctrl+C. That prompt comes from the Windows batch wrapper, not this server.
+Once `Server stopped safely.` appears, active work has already finished and it is
+safe to answer `Y`. To avoid the batch prompt entirely, launch Node directly:
+
+```powershell
+node --import tsx src/index.ts
+```
+
 The MCP endpoint is `http://localhost:5555/mcp`. A readable health endpoint is
 available at `http://localhost:5555/health`.
 
@@ -40,6 +49,12 @@ Each `run_cmd` call starts a new shell process in the configured workspace.
 Shell-local state such as `cd`, aliases, and environment variables does not carry
 over to later tool calls. To work in a subdirectory for one command, use a single
 command such as `cd project && npm test`.
+
+Models should use `ls`, `read_file`, `write_file`, `mkdir`, and `delete_file`
+instead of shell commands whenever one of those tools matches the operation.
+This is especially important on Windows: a process started by `run_cmd` can keep
+a file open, and Windows will not allow either the filesystem tool or a shell
+command to delete that file until the owning process exits.
 
 ## Use with llama.cpp WebUI
 
@@ -82,6 +97,13 @@ time only when you intentionally want to force the process to stop.
 - Real world: `get_current_time`
 
 There is intentionally no command sandbox or path restriction.
+
+`js_calculator` accepts JavaScript expressions as well as multiple statements.
+Separate statements with semicolons; the final expression supplies the returned
+value. For example, `const x = pow(2, 10); x + log(E)` returns `1025`. Wrap a
+final object literal in parentheses, such as `const x = 2; ({ x, square: x*x })`.
+It is intended for calculations, not as a general Node.js runner; Node.js
+`process`, `require`, filesystem, and network APIs are not provided.
 
 ## Add a tool
 
