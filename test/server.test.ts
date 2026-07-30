@@ -13,6 +13,7 @@ import { startServer } from "../src/server.js";
 let workspace: string;
 let server: Server;
 let client: Client;
+let baseUrl: string;
 
 function firstText(result: unknown): string {
   const content = (result as {
@@ -27,11 +28,12 @@ before(async () => {
   workspace = await mkdtemp(path.join(tmpdir(), "minimal-mcp-"));
   server = await startServer({ port: 0, cwd: workspace });
   const port = (server.address() as AddressInfo).port;
+  baseUrl = `http://127.0.0.1:${port}`;
 
   client = new Client({ name: "test-client", version: "1.0.0" });
   await client.connect(
     new StreamableHTTPClientTransport(
-      new URL(`http://127.0.0.1:${port}/mcp`),
+      new URL(`${baseUrl}/mcp`),
     ),
   );
 });
@@ -49,6 +51,34 @@ test("uses a server-start timestamp as the default workspace name", () => {
   assert.equal(path.dirname(path.dirname(config.cwd)), process.cwd());
   assert.equal(path.basename(path.dirname(config.cwd)), "sandbox");
   assert.match(path.basename(config.cwd), /^\d{6}-\d{6}$/);
+});
+
+test("allows browser requests from every origin", async () => {
+  const response = await fetch(`${baseUrl}/mcp`, {
+    method: "OPTIONS",
+    headers: {
+      origin: "http://localhost:8080",
+      "access-control-request-method": "POST",
+      "access-control-request-headers":
+        "content-type,mcp-protocol-version,last-event-id",
+      "access-control-request-private-network": "true",
+    },
+  });
+
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.get("access-control-allow-origin"), "*");
+  assert.equal(
+    response.headers.get("access-control-allow-methods"),
+    "GET, POST, DELETE, OPTIONS",
+  );
+  assert.equal(
+    response.headers.get("access-control-allow-headers"),
+    "content-type,mcp-protocol-version,last-event-id",
+  );
+  assert.equal(
+    response.headers.get("access-control-allow-private-network"),
+    "true",
+  );
 });
 
 test("lists all built-in tools", async () => {

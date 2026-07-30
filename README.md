@@ -43,9 +43,10 @@ command such as `cd project && npm test`.
 
 ## Use with llama.cpp WebUI
 
-Current llama.cpp WebUI releases support MCP over Streamable HTTP. Because this
-server does not currently add browser CORS headers, use llama-server's built-in
-MCP proxy.
+Current llama.cpp WebUI releases support MCP over Streamable HTTP. This server
+allows browser CORS requests from every origin, including preflight and Chromium
+private-network requests, so it can be connected directly or through
+llama-server's built-in MCP proxy.
 
 1. Start this MCP server:
 
@@ -53,7 +54,7 @@ MCP proxy.
    npm start
    ```
 
-2. Start `llama-server` with its MCP proxy enabled:
+2. Either connect the WebUI directly, or start `llama-server` with its MCP proxy:
 
    ```bash
    llama-server [your usual model options] --ui-mcp-proxy
@@ -63,11 +64,15 @@ MCP proxy.
 
    - URL: `http://127.0.0.1:5555/mcp`
    - Transport: Streamable HTTP
-   - Use llama-server proxy: enabled
+   - Use llama-server proxy: optional
 
 `--webui-mcp-proxy` is the deprecated name of the llama.cpp option; prefer
 `--ui-mcp-proxy`. The WebUI may keep a live MCP connection and reconnect it, but
 this server remains stateless and does not depend on transport-session continuity.
+
+Press Ctrl+C once to stop accepting new connections and wait for active MCP
+requests (including file writes and commands) to finish. Press Ctrl+C a second
+time only when you intentionally want to force the process to stop.
 
 ## Included tools
 

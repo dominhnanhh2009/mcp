@@ -6,6 +6,28 @@ import type { AppConfig } from "./config.js";
 import { registerTools } from "./tool-registry.js";
 import { tools } from "./tools/index.js";
 
+function addCorsHeaders(
+  request: IncomingMessage,
+  response: ServerResponse,
+): void {
+  response.setHeader("access-control-allow-origin", "*");
+  response.setHeader("access-control-allow-methods", "GET, POST, DELETE, OPTIONS");
+  response.setHeader(
+    "access-control-allow-headers",
+    request.headers["access-control-request-headers"] ?? "*",
+  );
+  response.setHeader(
+    "access-control-expose-headers",
+    "Mcp-Session-Id, MCP-Protocol-Version",
+  );
+  response.setHeader("access-control-max-age", "86400");
+
+  // Chromium sends this header when a public page accesses localhost/LAN.
+  if (request.headers["access-control-request-private-network"] === "true") {
+    response.setHeader("access-control-allow-private-network", "true");
+  }
+}
+
 function json(
   response: ServerResponse,
   status: number,
@@ -45,7 +67,15 @@ export async function startServer(config: AppConfig) {
 
   const server = createServer(async (request, response) => {
     try {
+      addCorsHeaders(request, response);
       const url = new URL(request.url ?? "/", "http://localhost");
+
+      if (request.method === "OPTIONS") {
+        response.writeHead(204);
+        response.end();
+        return;
+      }
+
       if (url.pathname === "/health" && request.method === "GET") {
         json(response, 200, {
           status: "ok",
