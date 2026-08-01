@@ -106,7 +106,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
-    /multiple statements/,
+    /functions, loops/,
   );
 });
 
@@ -142,7 +142,7 @@ test("deletes files created by the filesystem tools", async () => {
 });
 
 test("runs JavaScript calculations without repeating the input", async () => {
-  const expression = "const base = pow(2, 10); base + log(E)";
+  const expression = "const base = Math.pow(2, 10); base + Math.log(Math.E)";
   const result = await client.callTool({
     name: "js_calculator",
     arguments: { expression },
@@ -150,6 +150,23 @@ test("runs JavaScript calculations without repeating the input", async () => {
   const text = firstText(result);
   assert.equal(JSON.parse(text).result, 1025);
   assert.equal(text.includes(expression), false);
+});
+
+test("supports standard JavaScript without math aliases", async () => {
+  const result = await client.callTool({
+    name: "js_calculator",
+    arguments: {
+      expression:
+        "function sumTo(n) { let sum = 0; for (let i = 1; i <= n; i++) sum += i; return sum; } sumTo(100)",
+    },
+  });
+  assert.equal(JSON.parse(firstText(result)).result, 5050);
+
+  const alias = await client.callTool({
+    name: "js_calculator",
+    arguments: { expression: "typeof sqrt" },
+  });
+  assert.equal(JSON.parse(firstText(alias)).result, "undefined");
 });
 
 test("runs commands and returns readable current time", async () => {

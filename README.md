@@ -98,12 +98,10 @@ time only when you intentionally want to force the process to stop.
 
 There is intentionally no command sandbox or path restriction.
 
-`js_calculator` accepts JavaScript expressions as well as multiple statements.
-Separate statements with semicolons; the final expression supplies the returned
-value. For example, `const x = pow(2, 10); x + log(E)` returns `1025`. Wrap a
-final object literal in parentheses, such as `const x = 2; ({ x, square: x*x })`.
-It is intended for calculations, not as a general Node.js runner; Node.js
-`process`, `require`, filesystem, and network APIs are not provided.
+`js_calculator` evaluates standard JavaScript, including variables, functions,
+loops, and built-ins such as `Math`. The script's completion value is returned;
+for example, `const x = Math.pow(2, 10); x + Math.log(Math.E)` returns `1025`.
+Node.js APIs such as `process` and `require` are not provided.
 
 ## Add a tool
 
