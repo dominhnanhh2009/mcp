@@ -119,5 +119,22 @@ Create or edit a module under `src/tools`, then add its exported array to
 }
 ```
 
+When a tool should derive new information instead of returning its input, keep
+the response compact:
+
+```ts
+{
+  name: "text_length",
+  description: "Count the characters in supplied text.",
+  inputSchema: {
+    text: z.string(),
+  },
+  handler: ({ text }) => ({ characters: text.length }),
+}
+```
+
+Avoid echoing input arguments unless returning them is the tool's purpose. For
+mutation tools, a compact confirmation or useful measurement is usually enough.
+
 The registry handles MCP registration, Zod validation, result serialization, and
 error conversion.

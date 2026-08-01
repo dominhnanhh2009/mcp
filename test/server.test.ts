@@ -111,7 +111,7 @@ test("lists all built-in tools", async () => {
 });
 
 test("writes and reads a file", async () => {
-  await client.callTool({
+  const write = await client.callTool({
     name: "write_file",
     arguments: { path: "notes/hello.txt", content: "xin chào" },
   });
@@ -121,6 +121,9 @@ test("writes and reads a file", async () => {
   });
 
   assert.equal(await readFile(path.join(workspace, "notes/hello.txt"), "utf8"), "xin chào");
+  assert.deepEqual(JSON.parse(firstText(write)), { bytes_written: 9 });
+  assert.equal(firstText(write).includes("notes/hello.txt"), false);
+  assert.equal(firstText(write).includes("xin chào"), false);
   assert.equal(firstText(result), "xin chào");
 });
 
@@ -139,6 +142,18 @@ test("deletes files created by the filesystem tools", async () => {
     readFile(path.join(workspace, "temporary/delete-me.txt"), "utf8"),
     { code: "ENOENT" },
   );
+});
+
+test("does not echo input paths in filesystem errors", async () => {
+  const missingPath = "private/missing-secret-name.txt";
+  const result = await client.callTool({
+    name: "read_file",
+    arguments: { path: missingPath },
+  });
+
+  assert.equal((result as { isError?: boolean }).isError, true);
+  assert.equal(firstText(result), "File or directory does not exist (ENOENT)");
+  assert.equal(firstText(result).includes(missingPath), false);
 });
 
 test("runs JavaScript calculations without repeating the input", async () => {
@@ -176,11 +191,21 @@ test("runs commands and returns readable current time", async () => {
   });
   assert.equal(JSON.parse(firstText(command)).stdout, "ok");
 
+  const failedCommandText =
+    "node -e \"process.stderr.write('unique failure'); process.exit(2)\"";
+  const failedCommand = await client.callTool({
+    name: "run_cmd",
+    arguments: { command: failedCommandText },
+  });
+  const failed = JSON.parse(firstText(failedCommand));
+  assert.deepEqual(failed, { exit_code: 2, stderr: "unique failure" });
+  assert.equal(firstText(failedCommand).includes(failedCommandText), false);
+  assert.equal("error" in failed, false);
+
   const time = await client.callTool({
     name: "get_current_time",
     arguments: { timezone: "Asia/Bangkok" },
   });
-  const parsed = JSON.parse(firstText(time));
-  assert.equal(parsed.timezone, "Asia/Bangkok");
-  assert.match(parsed.human_readable, /\d{4}/);
+  assert.match(firstText(time), /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+07:00$/);
+  assert.equal(firstText(time).includes("Asia/Bangkok"), false);
 });

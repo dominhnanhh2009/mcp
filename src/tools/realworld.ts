@@ -15,18 +15,28 @@ export const realworldTools: ToolDefinition[] = [
     handler: ({ timezone }) => {
       const now = new Date();
       const requestedZone = timezone as string | undefined;
-      const formatter = new Intl.DateTimeFormat("en-CA", {
+      const formatter = new Intl.DateTimeFormat("sv-SE", {
         timeZone: requestedZone,
-        dateStyle: "full",
-        timeStyle: "long",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
         hourCycle: "h23",
+        timeZoneName: "longOffset",
       });
-      const resolvedZone = formatter.resolvedOptions().timeZone;
-      return {
-        human_readable: formatter.format(now),
-        timezone: resolvedZone,
-        iso_utc: now.toISOString(),
-      };
+      const parts = Object.fromEntries(
+        formatter
+          .formatToParts(now)
+          .filter((part) => part.type !== "literal")
+          .map((part) => [part.type, part.value]),
+      );
+      const timeZoneName = parts.timeZoneName ?? "GMT";
+      const offset = timeZoneName === "GMT"
+        ? "Z"
+        : timeZoneName.replace("GMT", "");
+      return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}${offset}`;
     },
   },
 ];

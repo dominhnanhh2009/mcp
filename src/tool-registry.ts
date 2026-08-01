@@ -23,6 +23,40 @@ function asResult(value: unknown): CallToolResult {
   return { content: [{ type: "text", text: text ?? "null" }] };
 }
 
+function asErrorResult(error: unknown): CallToolResult {
+  if (!(error instanceof Error)) {
+    return {
+      isError: true,
+      content: [{ type: "text", text: String(error) }],
+    };
+  }
+
+  const code =
+    "code" in error && error.code !== undefined ? String(error.code) : undefined;
+  const friendlyMessages: Record<string, string> = {
+    EACCES: "Permission denied",
+    EEXIST: "File or directory already exists",
+    EISDIR: "Expected a file but found a directory",
+    EMFILE: "Too many open files",
+    ENOENT: "File or directory does not exist",
+    ENOTDIR: "A path component is not a directory",
+    ENOTEMPTY: "Directory is not empty",
+    EPERM: "Operation is not permitted",
+  };
+  // Node filesystem errors append the path and syscall after a comma. The caller
+  // already has the path in the tool arguments, so keep only the useful reason.
+  const systemMessage = code
+    ? (error.message.split(",", 1)[0] ?? error.message)
+    : error.message;
+  const message = code ? (friendlyMessages[code] ?? systemMessage) : systemMessage;
+  const text = code ? `${message} (${code})` : message;
+
+  return {
+    isError: true,
+    content: [{ type: "text", text }],
+  };
+}
+
 export function registerTools(
   server: McpServer,
   tools: ToolDefinition[],
@@ -40,11 +74,7 @@ export function registerTools(
         try {
           return asResult(await tool.handler(input, context));
         } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          return {
-            isError: true,
-            content: [{ type: "text", text: message }],
-          };
+          return asErrorResult(error);
         }
       },
     );

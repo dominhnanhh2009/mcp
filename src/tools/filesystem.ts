@@ -29,7 +29,7 @@ export const filesystemTools: ToolDefinition[] = [
           };
         }),
       );
-      return { path: directory, entries: items };
+      return { entries: items };
     },
   },
   {
@@ -54,7 +54,7 @@ export const filesystemTools: ToolDefinition[] = [
       const file = resolvePath(cwd, target as string);
       await mkdir(path.dirname(file), { recursive: true });
       await writeFile(file, content as string, "utf8");
-      return { path: file, bytes_written: Buffer.byteLength(content as string) };
+      return { bytes_written: Buffer.byteLength(content as string) };
     },
   },
   {
@@ -67,7 +67,7 @@ export const filesystemTools: ToolDefinition[] = [
     handler: async ({ path: target }, { cwd }) => {
       const directory = resolvePath(cwd, target as string);
       await mkdir(directory, { recursive: true });
-      return { path: directory, created: true };
+      return { created: true };
     },
   },
   {
@@ -80,9 +80,9 @@ export const filesystemTools: ToolDefinition[] = [
     handler: async ({ path: target }, { cwd }) => {
       const file = resolvePath(cwd, target as string);
       const info = await stat(file);
-      if (!info.isFile()) throw new Error(`Not a file: ${file}`);
+      if (!info.isFile()) throw new Error("Target is not a file");
       await rm(file);
-      return { path: file, deleted: true };
+      return { deleted: true };
     },
   },
 ];
