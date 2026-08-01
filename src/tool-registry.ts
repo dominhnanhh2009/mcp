@@ -24,7 +24,15 @@ function asResult(value: unknown): CallToolResult {
 }
 
 function asErrorResult(error: unknown): CallToolResult {
-  if (!(error instanceof Error)) {
+  const errorLike: { message: string; code?: unknown; stack?: unknown } | undefined =
+    error !== null &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string"
+      ? (error as { message: string; code?: unknown; stack?: unknown })
+      : undefined;
+
+  if (!errorLike) {
     return {
       isError: true,
       content: [{ type: "text", text: String(error) }],
@@ -32,7 +40,9 @@ function asErrorResult(error: unknown): CallToolResult {
   }
 
   const code =
-    "code" in error && error.code !== undefined ? String(error.code) : undefined;
+    "code" in errorLike && errorLike.code !== undefined
+      ? String(errorLike.code)
+      : undefined;
   const friendlyMessages: Record<string, string> = {
     EACCES: "Permission denied",
     EEXIST: "File or directory already exists",
@@ -46,10 +56,14 @@ function asErrorResult(error: unknown): CallToolResult {
   // Node filesystem errors append the path and syscall after a comma. The caller
   // already has the path in the tool arguments, so keep only the useful reason.
   const systemMessage = code
-    ? (error.message.split(",", 1)[0] ?? error.message)
-    : error.message;
+    ? (errorLike.message.split(",", 1)[0] ?? errorLike.message)
+    : errorLike.message;
   const message = code ? (friendlyMessages[code] ?? systemMessage) : systemMessage;
-  const text = code ? `${message} (${code})` : message;
+  const stack =
+    "stack" in errorLike && typeof errorLike.stack === "string"
+      ? errorLike.stack
+      : undefined;
+  const text = code ? `${message} (${code})` : (stack ?? message);
 
   return {
     isError: true,

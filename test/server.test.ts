@@ -110,7 +110,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
-    /Never use ellipses.*placeholders.*omitted terms.*prose/,
+    /Do not substitute pseudocode, placeholders, or omitted computation/,
   );
 });
 
@@ -186,6 +186,21 @@ test("supports standard JavaScript without math aliases", async () => {
     arguments: { expression: "typeof sqrt" },
   });
   assert.equal(JSON.parse(firstText(alias)).result, "undefined");
+});
+
+test("returns complete JavaScript diagnostics", async () => {
+  const result = await client.callTool({
+    name: "js_calculator",
+    arguments: { expression: String.raw`let S=0;\nfor(let i=1;i<=3;i++)S^=i;\nS` },
+  });
+  const text = firstText(result);
+
+  assert.equal((result as { isError?: boolean }).isError, true);
+  assert.match(text, /^calculator\.js:1/m);
+  assert.match(text, /let S=0;\\nfor/);
+  assert.match(text, /^\s*\^$/m);
+  assert.match(text, /SyntaxError: Invalid or unexpected token/);
+  assert.match(text, /at new Script/);
 });
 
 test("runs commands and returns readable current time", async () => {
