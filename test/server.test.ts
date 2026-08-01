@@ -108,6 +108,10 @@ test("lists all built-in tools", async () => {
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
     /functions, loops/,
   );
+  assert.match(
+    result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
+    /Never use ellipses.*placeholders.*omitted terms.*prose/,
+  );
 });
 
 test("writes and reads a file", async () => {

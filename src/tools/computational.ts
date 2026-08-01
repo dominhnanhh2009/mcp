@@ -6,12 +6,14 @@ export const computationalTools: ToolDefinition[] = [
   {
     name: "js_calculator",
     description:
-      "Evaluate JavaScript calculations. Supports expressions, variables, functions, loops, and standard built-ins such as Math. Returns the script's completion value. Node.js APIs are not provided.",
+      "Evaluate complete, executable JavaScript calculations. Supports expressions, variables, functions, loops, and standard built-ins such as Math. Never use ellipses (...), placeholders, omitted terms, or prose as shorthand; express repeated computation with code such as a loop. Returns the script's completion value. Node.js APIs are not provided.",
     inputSchema: {
       expression: z
         .string()
         .min(1)
-        .describe("JavaScript code to evaluate"),
+        .describe(
+          "Complete, syntactically valid JavaScript code to evaluate; no ellipses, placeholders, omitted terms, or prose",
+        ),
     },
     handler: ({ expression }) => {
       const value = vm.runInNewContext(
