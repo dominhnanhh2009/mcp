@@ -52,6 +52,8 @@ function asErrorResult(error: unknown): CallToolResult {
     ENOTDIR: "A path component is not a directory",
     ENOTEMPTY: "Directory is not empty",
     EPERM: "Operation is not permitted",
+    EJSUNDEFINED:
+      "Script produced undefined. Put the answer in the final expression; do not rely on console.log",
   };
   // Node filesystem errors append the path and syscall after a comma. The caller
   // already has the path in the tool arguments, so keep only the useful reason.
