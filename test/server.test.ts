@@ -112,6 +112,10 @@ test("lists all built-in tools", async () => {
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
     /Do not use top-level `return` or rely on `console\.log`/,
   );
+  assert.match(
+    result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
+    /xs\.map/,
+  );
 });
 
 test("writes and reads a file", async () => {
@@ -169,6 +173,18 @@ test("runs JavaScript calculations without repeating the input", async () => {
   const text = firstText(result);
   assert.equal(JSON.parse(text).result, 1025);
   assert.equal(text.includes(expression), false);
+});
+
+test("normalizes typographic quotes in JavaScript", async () => {
+  const result = await client.callTool({
+    name: "js_calculator",
+    arguments: {
+      expression:
+        "const left = ‘hello’; const right = “world”; [left, right].join(’ ‘)",
+    },
+  });
+
+  assert.equal(JSON.parse(firstText(result)).result, "hello world");
 });
 
 test("supports standard JavaScript without math aliases", async () => {
