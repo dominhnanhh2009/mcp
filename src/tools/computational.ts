@@ -6,13 +6,13 @@ export const computationalTools: ToolDefinition[] = [
   {
     name: "js_calculator",
     description:
-      "Evaluate complete, executable JavaScript calculations. Supports expressions, variables, functions, loops, and standard built-ins such as Math. Do not substitute pseudocode, placeholders, or omitted computation for executable code; implement repeated computation with valid JavaScript such as a loop. JavaScript syntax such as string literals and spread/rest remains valid. Returns the script's completion value. Node.js APIs are not provided.",
+      "Run JavaScript as a script. Put the answer in the final expression, e.g. `const x = 2; x * 3`. Do not use top-level `return` or rely on `console.log`. Use executable code, not pseudocode or placeholders. No Node.js APIs.",
     inputSchema: {
       expression: z
         .string()
         .min(1)
         .describe(
-          "Complete, syntactically valid JavaScript code; do not replace executable logic with pseudocode, placeholders, or omitted computation",
+          "JavaScript source whose final expression is the answer",
         ),
     },
     handler: ({ expression }) => {
@@ -21,6 +21,14 @@ export const computationalTools: ToolDefinition[] = [
         Object.create(null),
         { timeout: 10_000, filename: "calculator.js" },
       );
+      if (value === undefined) {
+        throw Object.assign(
+          new Error(
+            "Script produced undefined. Put the answer in the final expression; do not rely on console.log.",
+          ),
+          { code: "EJSUNDEFINED" },
+        );
+      }
       if (typeof value === "number" && !Number.isFinite(value)) {
         return { result: String(value) };
       }

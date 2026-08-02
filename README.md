@@ -98,10 +98,10 @@ time only when you intentionally want to force the process to stop.
 
 There is intentionally no command sandbox or path restriction.
 
-`js_calculator` evaluates standard JavaScript, including variables, functions,
-loops, and built-ins such as `Math`. The script's completion value is returned;
+`js_calculator` runs JavaScript as a script and returns its final expression;
 for example, `const x = Math.pow(2, 10); x + Math.log(Math.E)` returns `1025`.
-Node.js APIs such as `process` and `require` are not provided.
+Top-level `return`, `console.log` output, and Node.js APIs such as `process` and
+`require` are not supported.
 
 ## Add a tool
 

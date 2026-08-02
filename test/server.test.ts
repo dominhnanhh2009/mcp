@@ -106,11 +106,11 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
-    /functions, loops/,
+    /final expression/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
-    /Do not substitute pseudocode, placeholders, or omitted computation/,
+    /Do not use top-level `return` or rely on `console\.log`/,
   );
 });
 
@@ -186,6 +186,19 @@ test("supports standard JavaScript without math aliases", async () => {
     arguments: { expression: "typeof sqrt" },
   });
   assert.equal(JSON.parse(firstText(alias)).result, "undefined");
+});
+
+test("explains how to fix an undefined JavaScript result", async () => {
+  const result = await client.callTool({
+    name: "js_calculator",
+    arguments: { expression: "console.log('answer')" },
+  });
+  const text = firstText(result);
+
+  assert.equal((result as { isError?: boolean }).isError, true);
+  assert.match(text, /Script produced undefined/);
+  assert.match(text, /final expression/);
+  assert.equal(text.includes("tool-registry"), false);
 });
 
 test("returns complete JavaScript diagnostics", async () => {
