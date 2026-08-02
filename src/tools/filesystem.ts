@@ -6,6 +6,25 @@ import type { ToolDefinition } from "../tool-registry.js";
 const resolvePath = (cwd: string, target = ".") =>
   path.isAbsolute(target) ? path.normalize(target) : path.resolve(cwd, target);
 
+const javascriptExtensions = new Set([
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".tsx",
+  ".mts",
+  ".cts",
+]);
+
+function normalizeJavaScriptQuotes(file: string, content: string): string {
+  if (!javascriptExtensions.has(path.extname(file).toLowerCase())) return content;
+
+  return content
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"');
+}
+
 export const filesystemTools: ToolDefinition[] = [
   {
     name: "ls",
@@ -52,9 +71,13 @@ export const filesystemTools: ToolDefinition[] = [
     },
     handler: async ({ path: target, content }, { cwd }) => {
       const file = resolvePath(cwd, target as string);
+      const normalizedContent = normalizeJavaScriptQuotes(
+        file,
+        content as string,
+      );
       await mkdir(path.dirname(file), { recursive: true });
-      await writeFile(file, content as string, "utf8");
-      return { bytes_written: Buffer.byteLength(content as string) };
+      await writeFile(file, normalizedContent, "utf8");
+      return { bytes_written: Buffer.byteLength(normalizedContent) };
     },
   },
   {

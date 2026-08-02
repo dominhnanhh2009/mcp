@@ -110,7 +110,11 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
-    /Do not use top-level `return` or rely on `console\.log`/,
+    /Instead of `console\.log\(message\)`/,
+  );
+  assert.match(
+    result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
+    /string as the final expression/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
@@ -133,6 +137,43 @@ test("writes and reads a file", async () => {
   assert.equal(firstText(write).includes("notes/hello.txt"), false);
   assert.equal(firstText(write).includes("xin chào"), false);
   assert.equal(firstText(result), "xin chào");
+});
+
+test("normalizes typographic quotes when writing JavaScript and TypeScript", async () => {
+  const javascript = "const greeting = \u201chello\u201d; greeting";
+  const typescript = "const greeting: string = \u2018hello\u2019; greeting";
+
+  await client.callTool({
+    name: "write_file",
+    arguments: { path: "src/greeting.js", content: javascript },
+  });
+  await client.callTool({
+    name: "write_file",
+    arguments: { path: "src/greeting.ts", content: typescript },
+  });
+
+  assert.equal(
+    await readFile(path.join(workspace, "src/greeting.js"), "utf8"),
+    'const greeting = "hello"; greeting',
+  );
+  assert.equal(
+    await readFile(path.join(workspace, "src/greeting.ts"), "utf8"),
+    "const greeting: string = 'hello'; greeting",
+  );
+});
+
+test("preserves typographic quotes in non-code files", async () => {
+  const content = "Keep \u201ctypographic quotes\u201d here.";
+
+  await client.callTool({
+    name: "write_file",
+    arguments: { path: "notes/quotes.txt", content },
+  });
+
+  assert.equal(
+    await readFile(path.join(workspace, "notes/quotes.txt"), "utf8"),
+    content,
+  );
 });
 
 test("deletes files created by the filesystem tools", async () => {

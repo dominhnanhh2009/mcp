@@ -12,7 +12,7 @@ export const computationalTools: ToolDefinition[] = [
   {
     name: "js_calculator",
     description:
-      "Run JavaScript as a script. Put the answer in the final expression, e.g. `const x = 2; x * 3` or `const xs = [1, 2]; xs.map(x => x * 2)`. Do not use top-level `return` or rely on `console.log`. Use executable code, not pseudocode or placeholders. No Node.js APIs.",
+      'Run JavaScript as a script. Put the answer in the final expression, e.g. `const x = 2; x * 3` or `const xs = [1, 2]; xs.map(x => x * 2)`. Instead of `console.log(message)`, use the string as the final expression: `const message = "answer"; message`. Do not use top-level `return`. Use executable code, not pseudocode or placeholders. No Node.js APIs.',
     inputSchema: {
       expression: z
         .string()
