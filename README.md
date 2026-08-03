@@ -50,13 +50,14 @@ Shell-local state such as `cd`, aliases, and environment variables does not carr
 over to later tool calls. To work in a subdirectory for one command, use a single
 command such as `cd project && npm test`.
 
-Models should use `ls`, `read_file`, `find`, `write_file`, `mkdir`, and `delete_file`
-instead of shell commands whenever one of those tools matches the operation.
-When editing part of an existing file, prefer `find` over rewriting the complete
-file with `write_file`.
+Models should use `run_cmd` for shell operations such as listing files (`ls`),
+creating directories (`mkdir dir`), deleting files (`rm file`), copying files
+(`cp a.txt b.txt`), moving files (`mv a.txt dir/`), and renaming files
+(`mv a.txt b.txt`). When editing part of an existing file, prefer `find` over
+rewriting the complete file with `write_file`.
 This is especially important on Windows: a process started by `run_cmd` can keep
-a file open, and Windows will not allow either the filesystem tool or a shell
-command to delete that file until the owning process exits.
+a file open, and Windows will not allow a later shell command to delete that file
+until the owning process exits.
 
 ## Use with llama.cpp WebUI
 
@@ -93,7 +94,7 @@ time only when you intentionally want to force the process to stop.
 
 ## Included tools
 
-- Filesystem: `ls`, `read_file`, `find`, `write_file`, `mkdir`, `delete_file`
+- Filesystem: `read_file`, `find`, `write_file`
 - Command: `run_cmd`
 - Computation: `js_calculator`
 - Real world: `get_current_time`

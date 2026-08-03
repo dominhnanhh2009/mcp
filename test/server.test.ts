@@ -85,7 +85,7 @@ test("lists all built-in tools", async () => {
   assert.equal(
     client.getInstructions(),
     "Paths are relative to the server workspace unless absolute. " +
-      "Prefer dedicated tools over run_cmd. " +
+      "Use run_cmd for shell operations such as listing files (`ls`), creating directories (`mkdir dir`), deleting files (`rm file`), copying files (`cp a.txt b.txt`), moving files (`mv a.txt dir/`), and renaming files (`mv a.txt b.txt`). " +
       "Use find for partial file edits and write_file for complete files. " +
       "Tool failures are returned as MCP error results.",
   );
@@ -94,12 +94,9 @@ test("lists all built-in tools", async () => {
   assert.deepEqual(
     result.tools.map((tool) => tool.name),
     [
-      "ls",
       "read_file",
       "write_file",
       "find",
-      "mkdir",
-      "delete_file",
       "run_cmd",
       "js_calculator",
       "get_current_time",
@@ -107,11 +104,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "run_cmd")?.description ?? "",
-    /without sandboxing when no dedicated tool applies/,
-  );
-  assert.match(
-    result.tools.find((tool) => tool.name === "delete_file")?.description ?? "",
-    /Stop any process holding it/,
+    /^Run a shell command without sandboxing\.$/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
@@ -262,23 +255,6 @@ test("find normalizes typographic quotes only for JavaScript files", async () =>
   assert.equal(
     await readFile(path.join(workspace, "edit.js"), "utf8"),
     'const value = "new";',
-  );
-});
-
-test("deletes files created by the filesystem tools", async () => {
-  await client.callTool({
-    name: "write_file",
-    arguments: { path: "temporary/delete-me.txt", content: "temporary" },
-  });
-  const result = await client.callTool({
-    name: "delete_file",
-    arguments: { path: "temporary/delete-me.txt" },
-  });
-
-  assert.equal(JSON.parse(firstText(result)).deleted, true);
-  await assert.rejects(
-    readFile(path.join(workspace, "temporary/delete-me.txt"), "utf8"),
-    { code: "ENOENT" },
   );
 });
 

@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
@@ -105,30 +105,6 @@ function reviewAround(content: string, start: number, end: number): string {
 
 export const filesystemTools: ToolDefinition[] = [
   {
-    name: "ls",
-    description: "List files and directories.",
-    inputSchema: {
-      path: z.string().default(".").describe("Directory to list"),
-    },
-    handler: async ({ path: target }, { cwd }) => {
-      const directory = resolvePath(cwd, target as string);
-      const entries = await readdir(directory, { withFileTypes: true });
-      const items = await Promise.all(
-        entries.map(async (entry) => {
-          const fullPath = path.join(directory, entry.name);
-          const info = await stat(fullPath);
-          return {
-            name: entry.name,
-            type: entry.isDirectory() ? "directory" : "file",
-            size_bytes: info.size,
-            modified_at: info.mtime.toISOString(),
-          };
-        }),
-      );
-      return { entries: items };
-    },
-  },
-  {
     name: "read_file",
     description: "Read a UTF-8 text file.",
     inputSchema: {
@@ -215,33 +191,6 @@ export const filesystemTools: ToolDefinition[] = [
           match.start + normalizedReplacement.length,
         ),
       };
-    },
-  },
-  {
-    name: "mkdir",
-    description: "Create a directory and missing parents.",
-    inputSchema: {
-      path: z.string().min(1).describe("Directory to create"),
-    },
-    handler: async ({ path: target }, { cwd }) => {
-      const directory = resolvePath(cwd, target as string);
-      await mkdir(directory, { recursive: true });
-      return { created: true };
-    },
-  },
-  {
-    name: "delete_file",
-    description:
-      "Delete one file, never a directory. Stop any process holding it before retrying a Windows file-in-use error.",
-    inputSchema: {
-      path: z.string().min(1).describe("File to delete"),
-    },
-    handler: async ({ path: target }, { cwd }) => {
-      const file = resolvePath(cwd, target as string);
-      const info = await stat(file);
-      if (!info.isFile()) throw new Error("Target is not a file");
-      await rm(file);
-      return { deleted: true };
     },
   },
 ];

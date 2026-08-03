@@ -8,8 +8,7 @@ const execAsync = promisify(exec);
 export const commandTools: ToolDefinition[] = [
   {
     name: "run_cmd",
-    description:
-      "Run a shell command without sandboxing when no dedicated tool applies.",
+    description: "Run a shell command without sandboxing.",
     inputSchema: {
       command: z.string().min(1).describe("Shell command to execute"),
       timeout_ms: z
