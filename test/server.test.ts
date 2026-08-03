@@ -89,6 +89,7 @@ test("lists all built-in tools", async () => {
       "ls",
       "read_file",
       "write_file",
+      "find",
       "mkdir",
       "delete_file",
       "run_cmd",
@@ -173,6 +174,90 @@ test("preserves typographic quotes in non-code files", async () => {
   assert.equal(
     await readFile(path.join(workspace, "notes/quotes.txt"), "utf8"),
     content,
+  );
+});
+
+test("finds case-insensitively and replaces one closest match", async () => {
+  await client.callTool({
+    name: "write_file",
+    arguments: {
+      path: "notes/find.txt",
+      content: "before The quick brown fox after",
+    },
+  });
+
+  const result = await client.callTool({
+    name: "find",
+    arguments: {
+      file: "notes/find.txt",
+      content: "the quick brown fix",
+      replacement: "the slow fox",
+    },
+  });
+
+  assert.equal(
+    await readFile(path.join(workspace, "notes/find.txt"), "utf8"),
+    "before the slow fox after",
+  );
+  const response = JSON.parse(firstText(result));
+  assert.equal(response.success, true);
+  assert.ok(response.match_percentage >= 90);
+  assert.match(response.review, /the slow fox/);
+});
+
+test("find does not edit ambiguous or low-confidence matches", async () => {
+  const ambiguous = "repeat me / repeat me";
+  await client.callTool({
+    name: "write_file",
+    arguments: { path: "notes/ambiguous.txt", content: ambiguous },
+  });
+  const tied = await client.callTool({
+    name: "find",
+    arguments: {
+      file: "notes/ambiguous.txt",
+      content: "repeat me",
+      replacement: "changed",
+    },
+  });
+  assert.equal((tied as { isError?: boolean }).isError, true);
+  assert.match(firstText(tied), /Found 2 matches/);
+  assert.equal(
+    await readFile(path.join(workspace, "notes/ambiguous.txt"), "utf8"),
+    ambiguous,
+  );
+
+  const low = await client.callTool({
+    name: "find",
+    arguments: {
+      file: "notes/ambiguous.txt",
+      content: "completely unrelated content",
+      replacement: "changed",
+    },
+  });
+  assert.equal((low as { isError?: boolean }).isError, true);
+  assert.match(firstText(low), /below the required 90%/);
+  assert.equal(
+    await readFile(path.join(workspace, "notes/ambiguous.txt"), "utf8"),
+    ambiguous,
+  );
+});
+
+test("find normalizes typographic quotes only for JavaScript files", async () => {
+  await client.callTool({
+    name: "write_file",
+    arguments: { path: "edit.js", content: "const value = 'old';" },
+  });
+  await client.callTool({
+    name: "find",
+    arguments: {
+      file: "edit.js",
+      content: "'old'",
+      replacement: "“new”",
+    },
+  });
+  assert.equal(
+    await readFile(path.join(workspace, "edit.js"), "utf8"),
+    'const value = "new";',
   );
 });
 
