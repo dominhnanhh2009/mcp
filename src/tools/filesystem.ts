@@ -116,7 +116,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "write_file",
     description:
-      "Write a complete UTF-8 text file, creating missing parent directories.",
+      "Write a complete UTF-8 text file, creating missing parent directories. Not recommended for partial edits; use find_andor_edit instead.",
     inputSchema: {
       path: z.string().min(1).describe("File to write"),
       content: z.string().describe("Complete file content"),
@@ -133,9 +133,9 @@ export const filesystemTools: ToolDefinition[] = [
     },
   },
   {
-    name: "find",
+    name: "find_andor_edit",
     description:
-      "Find or replace the closest case-insensitive match in a UTF-8 file. Requires one match at 90% or better; omit replacement to inspect only.",
+      "Find or replace the closest case-insensitive match in a UTF-8 file. Requires one match at 90% or better; omit replacement to inspect only. After an edit, verify it with the returned review field instead of calling read_file merely to read the file again.",
     inputSchema: {
       content: z.string().min(1).describe("Existing content to find"),
       replacement: z
