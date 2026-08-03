@@ -42,10 +42,19 @@ async function handleMcp(
   response: ServerResponse,
   cwd: string,
 ): Promise<void> {
-  const mcp = new McpServer({
-    name: "minimal-node-mcp",
-    version: "0.1.0",
-  });
+  const mcp = new McpServer(
+    {
+      name: "minimal-node-mcp",
+      version: "0.1.0",
+    },
+    {
+      instructions:
+        "Paths are relative to the server workspace unless absolute. " +
+        "Prefer dedicated tools over run_cmd. " +
+        "Use find for partial file edits and write_file for complete files. " +
+        "Tool failures are returned as MCP error results.",
+    },
+  );
   registerTools(mcp, tools, { cwd });
 
   const transport = new StreamableHTTPServerTransport({

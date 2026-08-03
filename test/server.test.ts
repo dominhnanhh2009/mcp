@@ -82,6 +82,14 @@ test("allows browser requests from every origin", async () => {
 });
 
 test("lists all built-in tools", async () => {
+  assert.equal(
+    client.getInstructions(),
+    "Paths are relative to the server workspace unless absolute. " +
+      "Prefer dedicated tools over run_cmd. " +
+      "Use find for partial file edits and write_file for complete files. " +
+      "Tool failures are returned as MCP error results.",
+  );
+
   const result = await client.listTools();
   assert.deepEqual(
     result.tools.map((tool) => tool.name),
@@ -99,11 +107,11 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "run_cmd")?.description ?? "",
-    /Prefer ls, read_file, write_file, mkdir, and delete_file/,
+    /without sandboxing when no dedicated tool applies/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "delete_file")?.description ?? "",
-    /first stop the command or process holding it/,
+    /Stop any process holding it/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
@@ -111,11 +119,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
-    /Instead of `console\.log\(message\)`/,
-  );
-  assert.match(
-    result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
-    /string as the final expression/,
+    /Do not use console\.log/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",

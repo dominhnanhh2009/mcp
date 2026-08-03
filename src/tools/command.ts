@@ -9,7 +9,7 @@ export const commandTools: ToolDefinition[] = [
   {
     name: "run_cmd",
     description:
-      "Run a shell command only when no dedicated tool provides the operation. Prefer ls, read_file, write_file, mkdir, and delete_file for filesystem work; do not use shell commands for those operations. A command may start processes that keep files open on Windows, preventing safe deletion until those processes exit. No sandboxing is applied.",
+      "Run a shell command without sandboxing when no dedicated tool applies.",
     inputSchema: {
       command: z.string().min(1).describe("Shell command to execute"),
       timeout_ms: z

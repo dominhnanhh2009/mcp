@@ -4,8 +4,7 @@ import type { ToolDefinition } from "../tool-registry.js";
 export const realworldTools: ToolDefinition[] = [
   {
     name: "get_current_time",
-    description:
-      "Get the current date and time in an LLM-friendly format, optionally in a specific IANA timezone.",
+    description: "Get the current time, optionally in an IANA timezone.",
     inputSchema: {
       timezone: z
         .string()

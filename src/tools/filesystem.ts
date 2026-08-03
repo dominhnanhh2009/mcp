@@ -106,8 +106,7 @@ function reviewAround(content: string, start: number, end: number): string {
 export const filesystemTools: ToolDefinition[] = [
   {
     name: "ls",
-    description:
-      "Preferred tool for listing files and directories; use this instead of a shell command. Paths are relative to the server workspace unless absolute.",
+    description: "List files and directories.",
     inputSchema: {
       path: z.string().default(".").describe("Directory to list"),
     },
@@ -131,8 +130,7 @@ export const filesystemTools: ToolDefinition[] = [
   },
   {
     name: "read_file",
-    description:
-      "Preferred tool for reading a UTF-8 text file; use this instead of a shell command. Paths are relative to the server workspace unless absolute.",
+    description: "Read a UTF-8 text file.",
     inputSchema: {
       path: z.string().min(1).describe("File to read"),
     },
@@ -142,7 +140,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "write_file",
     description:
-      "Preferred tool for writing a UTF-8 text file; use this instead of a shell command. Creates the file and missing parent directories when needed, and closes the file before returning.",
+      "Write a complete UTF-8 text file, creating missing parent directories.",
     inputSchema: {
       path: z.string().min(1).describe("File to write"),
       content: z.string().describe("Complete file content"),
@@ -161,7 +159,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "find",
     description:
-      "Preferred tool for safely finding or editing part of an existing UTF-8 file; use this instead of rewriting the whole file with write_file. Finds the single closest case-insensitive match and reports its similarity. It makes no change when the best match is below 90% or tied with another match. Omit replacement to inspect only. Paths are relative to the server workspace unless absolute.",
+      "Find or replace the closest case-insensitive match in a UTF-8 file. Requires one match at 90% or better; omit replacement to inspect only.",
     inputSchema: {
       content: z.string().min(1).describe("Existing content to find"),
       replacement: z
@@ -221,8 +219,7 @@ export const filesystemTools: ToolDefinition[] = [
   },
   {
     name: "mkdir",
-    description:
-      "Preferred tool for creating a directory and any missing parent directories; use this instead of a shell command.",
+    description: "Create a directory and missing parents.",
     inputSchema: {
       path: z.string().min(1).describe("Directory to create"),
     },
@@ -235,7 +232,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "delete_file",
     description:
-      "Preferred tool for deleting one file; use this instead of a shell command. It does not delete directories. If Windows reports that the file is in use, first stop the command or process holding it, then retry; this tool never forces an unsafe deletion.",
+      "Delete one file, never a directory. Stop any process holding it before retrying a Windows file-in-use error.",
     inputSchema: {
       path: z.string().min(1).describe("File to delete"),
     },
