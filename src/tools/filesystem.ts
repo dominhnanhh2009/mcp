@@ -103,7 +103,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "text_editor",
     description:
-      "The dedicated tool for all file-content work: read, create, search, and edit UTF-8 files. Always use this tool for file contents. select targets text; an empty select targets the whole file. Omit replacement to read; provide it to write. Whole-file writes create missing files and directories.",
+      "The dedicated tool for all file-content work: read, create, search, and edit UTF-8 files. Always use this tool for file contents. Omit select to target the whole file; provide select to target text. Omit replacement to read; provide it to write. Whole-file writes create missing files and directories.",
     inputSchema: {
       file: z
         .string()
@@ -111,7 +111,9 @@ export const filesystemTools: ToolDefinition[] = [
         .describe("Target file path"),
       select: z
         .string()
-        .describe("Text to select; an empty string selects the whole file"),
+        .min(1)
+        .optional()
+        .describe("Text to select; omit to select the whole file"),
       replacement: z
         .string()
         .optional()
@@ -119,7 +121,7 @@ export const filesystemTools: ToolDefinition[] = [
     },
     handler: async ({ file: target, select, replacement }, { cwd }) => {
       const file = resolvePath(cwd, target as string);
-      if (select === "") {
+      if (select === undefined) {
         if (replacement === undefined) return readFile(file, "utf8");
 
         const normalizedReplacement = normalizeJavaScriptQuotes(

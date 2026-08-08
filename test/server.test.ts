@@ -105,8 +105,16 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "text_editor")?.description ?? "",
-    /dedicated tool for all file-content work.*Always use this tool for file contents.*empty select.*Whole-file writes create missing files and directories/,
+    /dedicated tool for all file-content work.*Always use this tool for file contents.*Omit select to target the whole file.*Whole-file writes create missing files and directories/,
   );
+  const textEditorSchema = result.tools.find(
+    (tool) => tool.name === "text_editor",
+  )?.inputSchema as {
+    required?: string[];
+    properties?: { select?: { minLength?: number } };
+  };
+  assert.deepEqual(textEditorSchema.required, ["file"]);
+  assert.equal(textEditorSchema.properties?.select?.minLength, 1);
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
     /final expression/,
@@ -120,11 +128,11 @@ test("lists all built-in tools", async () => {
 test("creates and reads a whole file through text_editor", async () => {
   const write = await client.callTool({
     name: "text_editor",
-    arguments: { file: "notes/hello.txt", select: "", replacement: "xin chào" },
+    arguments: { file: "notes/hello.txt", replacement: "xin chào" },
   });
   const result = await client.callTool({
     name: "text_editor",
-    arguments: { file: "notes/hello.txt", select: "" },
+    arguments: { file: "notes/hello.txt" },
   });
 
   assert.equal(await readFile(path.join(workspace, "notes/hello.txt"), "utf8"), "xin chào");
@@ -140,11 +148,11 @@ test("normalizes typographic quotes when writing JavaScript and TypeScript", asy
 
   await client.callTool({
     name: "text_editor",
-    arguments: { file: "src/greeting.js", select: "", replacement: javascript },
+    arguments: { file: "src/greeting.js", replacement: javascript },
   });
   await client.callTool({
     name: "text_editor",
-    arguments: { file: "src/greeting.ts", select: "", replacement: typescript },
+    arguments: { file: "src/greeting.ts", replacement: typescript },
   });
 
   assert.equal(
@@ -162,7 +170,7 @@ test("preserves typographic quotes in non-code files", async () => {
 
   await client.callTool({
     name: "text_editor",
-    arguments: { file: "notes/quotes.txt", select: "", replacement: content },
+    arguments: { file: "notes/quotes.txt", replacement: content },
   });
 
   assert.equal(
@@ -176,7 +184,6 @@ test("finds case-insensitively and replaces one closest match", async () => {
     name: "text_editor",
     arguments: {
       file: "notes/search.txt",
-      select: "",
       replacement: "before The quick brown fox after",
     },
   });
@@ -204,7 +211,7 @@ test("text_editor does not edit ambiguous or low-confidence matches", async () =
   const ambiguous = "repeat me / repeat me";
   await client.callTool({
     name: "text_editor",
-    arguments: { file: "notes/ambiguous.txt", select: "", replacement: ambiguous },
+    arguments: { file: "notes/ambiguous.txt", replacement: ambiguous },
   });
   const tied = await client.callTool({
     name: "text_editor",
@@ -242,7 +249,6 @@ test("search mode returns up to three high-confidence matches", async () => {
     name: "text_editor",
     arguments: {
       file: "notes/matches.txt",
-      select: "",
       replacement: "alpha target / target / target / target",
     },
   });
@@ -266,7 +272,6 @@ test("treats WHOLE_FILE as ordinary searchable text", async () => {
     name: "text_editor",
     arguments: {
       file: "notes/literal-sentinel.txt",
-      select: "",
       replacement: "before WHOLE_FILE after",
     },
   });
@@ -283,7 +288,7 @@ test("treats WHOLE_FILE as ordinary searchable text", async () => {
 test("text_editor normalizes typographic quotes only for JavaScript files", async () => {
   await client.callTool({
     name: "text_editor",
-    arguments: { file: "edit.js", select: "", replacement: "const value = 'old';" },
+    arguments: { file: "edit.js", replacement: "const value = 'old';" },
   });
   await client.callTool({
     name: "text_editor",
@@ -303,7 +308,7 @@ test("does not echo input paths in filesystem errors", async () => {
   const missingPath = "private/missing-secret-name.txt";
   const result = await client.callTool({
     name: "text_editor",
-    arguments: { file: missingPath, select: "" },
+    arguments: { file: missingPath },
   });
 
   assert.equal((result as { isError?: boolean }).isError, true);
