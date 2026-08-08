@@ -101,7 +101,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "run_cmd")?.description ?? "",
-    /as a last resort.*NEVER use this tool when another provided tool.*listing \(`ls`\).*renaming \(`mv a b`\)/,
+    /NEVER use this tool when another provided tool.*only when all other tools are unsuitable.*Examples: listing \(`ls`\).*renaming \(`mv a b`\)/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "find")?.description ?? "",
