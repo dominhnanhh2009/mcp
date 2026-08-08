@@ -103,23 +103,23 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "text_editor",
     description:
-      "Search or replace text in a UTF-8 file. Omit replacement to return up to three fuzzy, case-insensitive matches scoring at least 90%; provide it to replace one unambiguous best match. Use empty content to select the whole file for reading or rewriting; whole-file writes create missing paths.",
+      "Read or replace selected UTF-8 file content. An empty select targets the whole file. Omit replacement to read. Provide replacement to write; whole-file writes create missing files and directories.",
     inputSchema: {
-      content: z
-        .string()
-        .describe("Text to search; an empty string selects the whole file"),
-      replacement: z
-        .string()
-        .optional()
-        .describe("New content; omit to inspect the selection"),
       file: z
         .string()
         .min(1)
-        .describe("File path"),
+        .describe("Target file path"),
+      select: z
+        .string()
+        .describe("Text to select; an empty string selects the whole file"),
+      replacement: z
+        .string()
+        .optional()
+        .describe("Text to replace the selection; omit to read"),
     },
-    handler: async ({ content, replacement, file: target }, { cwd }) => {
+    handler: async ({ file: target, select, replacement }, { cwd }) => {
       const file = resolvePath(cwd, target as string);
-      if (content === "") {
+      if (select === "") {
         if (replacement === undefined) return readFile(file, "utf8");
 
         const normalizedReplacement = normalizeJavaScriptQuotes(
@@ -131,7 +131,7 @@ export const filesystemTools: ToolDefinition[] = [
         return { bytes_written: Buffer.byteLength(normalizedReplacement) };
       }
 
-      const query = content as string;
+      const query = select as string;
       const original = await readFile(file, "utf8");
       const matches = rankMatches(original, query);
       const percentage = matches[0]

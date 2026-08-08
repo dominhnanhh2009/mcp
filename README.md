@@ -54,8 +54,8 @@ Models should use `run_cmd` for shell operations such as listing files (`ls`),
 creating directories (`mkdir dir`), deleting files (`rm file`), copying files
 (`cp a.txt b.txt`), moving files (`mv a.txt dir/`), and renaming files
 (`mv a.txt b.txt`). Use `text_editor` for all UTF-8 file reads and writes. Its
-`file` field selects the path, `content` selects text to search, and providing
-`replacement` switches the tool from inspection to editing. Set `content` to an
+`file` field selects the path, `select` selects text to search, and providing
+`replacement` switches the tool from inspection to editing. Set `select` to an
 empty string and omit `replacement` to read a whole file; add `replacement` to
 create or completely rewrite one. A non-empty string always means ordinary search
 mode, which returns up to three matches scoring at least 90%.

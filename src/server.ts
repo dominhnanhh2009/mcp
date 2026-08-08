@@ -45,7 +45,7 @@ async function handleMcp(
   const mcp = new McpServer(
     {
       name: "minimal-node-mcp",
-      version: "1.0.4",
+      version: "1.1.0",
     },
     {
       instructions:
