@@ -85,8 +85,6 @@ test("lists all built-in tools", async () => {
   assert.equal(
     client.getInstructions(),
     "Paths are relative to the server workspace unless absolute. " +
-      "Use run_cmd for shell operations such as listing files (`ls`), creating directories (`mkdir dir`), deleting files (`rm file`), copying files (`cp a.txt b.txt`), moving files (`mv a.txt dir/`), and renaming files (`mv a.txt b.txt`). " +
-      "For every small or partial file edit, use find_andor_edit instead of write_file; use write_file only when creating or truly rewriting the entire file. " +
       "Tool failures are returned as MCP error results.",
   );
 
@@ -94,9 +92,7 @@ test("lists all built-in tools", async () => {
   assert.deepEqual(
     result.tools.map((tool) => tool.name),
     [
-      "read_file",
-      "write_file",
-      "find_andor_edit",
+      "find",
       "run_cmd",
       "js_calculator",
       "get_current_time",
@@ -104,15 +100,11 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "run_cmd")?.description ?? "",
-    /^Run a shell command without sandboxing\.$/,
+    /listing \(`ls`\).*renaming \(`mv a b`\)/,
   );
   assert.match(
-    result.tools.find((tool) => tool.name === "find_andor_edit")?.description ?? "",
-    /verify it with the returned review field instead of calling read_file/,
-  );
-  assert.match(
-    result.tools.find((tool) => tool.name === "write_file")?.description ?? "",
-    /Not recommended for partial edits; use find_andor_edit instead/,
+    result.tools.find((tool) => tool.name === "find")?.description ?? "",
+    /empty content.*whole-file writes create missing paths/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
@@ -122,20 +114,16 @@ test("lists all built-in tools", async () => {
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
     /Do not use console\.log/,
   );
-  assert.match(
-    result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
-    /xs\.map/,
-  );
 });
 
-test("writes and reads a file", async () => {
+test("creates and reads a whole file through find", async () => {
   const write = await client.callTool({
-    name: "write_file",
-    arguments: { path: "notes/hello.txt", content: "xin chào" },
+    name: "find",
+    arguments: { file: "notes/hello.txt", content: "", replacement: "xin chào" },
   });
   const result = await client.callTool({
-    name: "read_file",
-    arguments: { path: "notes/hello.txt" },
+    name: "find",
+    arguments: { file: "notes/hello.txt", content: "" },
   });
 
   assert.equal(await readFile(path.join(workspace, "notes/hello.txt"), "utf8"), "xin chào");
@@ -150,12 +138,12 @@ test("normalizes typographic quotes when writing JavaScript and TypeScript", asy
   const typescript = "const greeting: string = \u2018hello\u2019; greeting";
 
   await client.callTool({
-    name: "write_file",
-    arguments: { path: "src/greeting.js", content: javascript },
+    name: "find",
+    arguments: { file: "src/greeting.js", content: "", replacement: javascript },
   });
   await client.callTool({
-    name: "write_file",
-    arguments: { path: "src/greeting.ts", content: typescript },
+    name: "find",
+    arguments: { file: "src/greeting.ts", content: "", replacement: typescript },
   });
 
   assert.equal(
@@ -172,8 +160,8 @@ test("preserves typographic quotes in non-code files", async () => {
   const content = "Keep \u201ctypographic quotes\u201d here.";
 
   await client.callTool({
-    name: "write_file",
-    arguments: { path: "notes/quotes.txt", content },
+    name: "find",
+    arguments: { file: "notes/quotes.txt", content: "", replacement: content },
   });
 
   assert.equal(
@@ -184,15 +172,16 @@ test("preserves typographic quotes in non-code files", async () => {
 
 test("finds case-insensitively and replaces one closest match", async () => {
   await client.callTool({
-    name: "write_file",
+    name: "find",
     arguments: {
-      path: "notes/find.txt",
-      content: "before The quick brown fox after",
+      file: "notes/find.txt",
+      content: "",
+      replacement: "before The quick brown fox after",
     },
   });
 
   const result = await client.callTool({
-    name: "find_andor_edit",
+    name: "find",
     arguments: {
       file: "notes/find.txt",
       content: "the quick brown fix",
@@ -213,11 +202,11 @@ test("finds case-insensitively and replaces one closest match", async () => {
 test("find does not edit ambiguous or low-confidence matches", async () => {
   const ambiguous = "repeat me / repeat me";
   await client.callTool({
-    name: "write_file",
-    arguments: { path: "notes/ambiguous.txt", content: ambiguous },
+    name: "find",
+    arguments: { file: "notes/ambiguous.txt", content: "", replacement: ambiguous },
   });
   const tied = await client.callTool({
-    name: "find_andor_edit",
+    name: "find",
     arguments: {
       file: "notes/ambiguous.txt",
       content: "repeat me",
@@ -232,7 +221,7 @@ test("find does not edit ambiguous or low-confidence matches", async () => {
   );
 
   const low = await client.callTool({
-    name: "find_andor_edit",
+    name: "find",
     arguments: {
       file: "notes/ambiguous.txt",
       content: "completely unrelated content",
@@ -247,13 +236,56 @@ test("find does not edit ambiguous or low-confidence matches", async () => {
   );
 });
 
+test("find mode returns up to three high-confidence matches", async () => {
+  await client.callTool({
+    name: "find",
+    arguments: {
+      file: "notes/matches.txt",
+      content: "",
+      replacement: "alpha target / target / target / target",
+    },
+  });
+
+  const result = await client.callTool({
+    name: "find",
+    arguments: { file: "notes/matches.txt", content: "target" },
+  });
+  const response = JSON.parse(firstText(result));
+  assert.equal(response.success, true);
+  assert.equal(response.matches.length, 3);
+  assert.ok(
+    response.matches.every(
+      (match: { match_percentage: number }) => match.match_percentage >= 90,
+    ),
+  );
+});
+
+test("treats WHOLE_FILE as ordinary searchable text", async () => {
+  await client.callTool({
+    name: "find",
+    arguments: {
+      file: "notes/literal-sentinel.txt",
+      content: "",
+      replacement: "before WHOLE_FILE after",
+    },
+  });
+
+  const result = await client.callTool({
+    name: "find",
+    arguments: { file: "notes/literal-sentinel.txt", content: "WHOLE_FILE" },
+  });
+  const response = JSON.parse(firstText(result));
+  assert.equal(response.matches[0].match_percentage, 100);
+  assert.match(response.matches[0].review, /WHOLE_FILE/);
+});
+
 test("find normalizes typographic quotes only for JavaScript files", async () => {
   await client.callTool({
-    name: "write_file",
-    arguments: { path: "edit.js", content: "const value = 'old';" },
+    name: "find",
+    arguments: { file: "edit.js", content: "", replacement: "const value = 'old';" },
   });
   await client.callTool({
-    name: "find_andor_edit",
+    name: "find",
     arguments: {
       file: "edit.js",
       content: "'old'",
@@ -269,8 +301,8 @@ test("find normalizes typographic quotes only for JavaScript files", async () =>
 test("does not echo input paths in filesystem errors", async () => {
   const missingPath = "private/missing-secret-name.txt";
   const result = await client.callTool({
-    name: "read_file",
-    arguments: { path: missingPath },
+    name: "find",
+    arguments: { file: missingPath, content: "" },
   });
 
   assert.equal((result as { isError?: boolean }).isError, true);

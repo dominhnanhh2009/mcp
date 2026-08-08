@@ -8,7 +8,8 @@ const execAsync = promisify(exec);
 export const commandTools: ToolDefinition[] = [
   {
     name: "run_cmd",
-    description: "Run a shell command without sandboxing.",
+    description:
+      "Run an unsandboxed shell command in the workspace. Use it for file operations such as listing (`ls`), creating directories (`mkdir dir`), deleting (`rm file`), copying (`cp a b`), moving, or renaming (`mv a b`).",
     inputSchema: {
       command: z.string().min(1).describe("Shell command to execute"),
       timeout_ms: z

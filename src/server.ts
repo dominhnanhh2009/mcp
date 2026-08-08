@@ -45,13 +45,11 @@ async function handleMcp(
   const mcp = new McpServer(
     {
       name: "minimal-node-mcp",
-      version: "0.1.0",
+      version: "1.0.0",
     },
     {
       instructions:
         "Paths are relative to the server workspace unless absolute. " +
-        "Use run_cmd for shell operations such as listing files (`ls`), creating directories (`mkdir dir`), deleting files (`rm file`), copying files (`cp a.txt b.txt`), moving files (`mv a.txt dir/`), and renaming files (`mv a.txt b.txt`). " +
-        "For every small or partial file edit, use find_andor_edit instead of write_file; use write_file only when creating or truly rewriting the entire file. " +
         "Tool failures are returned as MCP error results.",
     },
   );

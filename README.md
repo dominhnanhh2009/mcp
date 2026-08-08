@@ -53,10 +53,12 @@ command such as `cd project && npm test`.
 Models should use `run_cmd` for shell operations such as listing files (`ls`),
 creating directories (`mkdir dir`), deleting files (`rm file`), copying files
 (`cp a.txt b.txt`), moving files (`mv a.txt dir/`), and renaming files
-(`mv a.txt b.txt`). For every small or partial edit, use `find_andor_edit`
-instead of `write_file`; use `write_file` only when creating or truly rewriting
-the entire file. Verify a `find_andor_edit` edit with its returned `review` field
-rather than calling `read_file` merely to read the edited file again.
+(`mv a.txt b.txt`). Use `find` for all UTF-8 file reads and writes. Its `file`
+field selects the path, `content` selects text to find, and providing
+`replacement` switches the tool from inspection to editing. Set `content` to an
+empty string and omit `replacement` to read a whole file; add `replacement` to
+create or completely rewrite one. A non-empty string always means ordinary find
+mode, which returns up to three matches scoring at least 90%.
 This is especially important on Windows: a process started by `run_cmd` can keep
 a file open, and Windows will not allow a later shell command to delete that file
 until the owning process exits.
@@ -96,7 +98,7 @@ time only when you intentionally want to force the process to stop.
 
 ## Included tools
 
-- Filesystem: `read_file`, `find_andor_edit`, `write_file`
+- Filesystem: `find`
 - Command: `run_cmd`
 - Computation: `js_calculator`
 - Real world: `get_current_time`

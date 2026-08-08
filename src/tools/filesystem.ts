@@ -82,11 +82,7 @@ function findBestMatches(source: string, query: string): Match[] {
     (left, right) =>
       similarity(right) - similarity(left) || left.start - right.start,
   );
-  if (ranked.length === 0) return [];
-  const bestSimilarity = similarity(ranked[0]!);
-  return ranked.filter(
-    (match) => Math.abs(similarity(match) - bestSimilarity) < Number.EPSILON,
-  );
+  return ranked;
 }
 
 function matchPercentage(match: Match, queryLength: number): number {
@@ -105,47 +101,36 @@ function reviewAround(content: string, start: number, end: number): string {
 
 export const filesystemTools: ToolDefinition[] = [
   {
-    name: "read_file",
-    description: "Read a UTF-8 text file.",
-    inputSchema: {
-      path: z.string().min(1).describe("File to read"),
-    },
-    handler: async ({ path: target }, { cwd }) =>
-      readFile(resolvePath(cwd, target as string), "utf8"),
-  },
-  {
-    name: "write_file",
+    name: "find",
     description:
-      "Write a complete UTF-8 text file, creating missing parent directories. Not recommended for partial edits; use find_andor_edit instead.",
+      "Find or replace text in a UTF-8 file. Omit replacement to return up to three fuzzy, case-insensitive matches scoring at least 90%; provide it to replace one unambiguous best match. Use empty content to select the whole file for reading or rewriting; whole-file writes create missing paths.",
     inputSchema: {
-      path: z.string().min(1).describe("File to write"),
-      content: z.string().describe("Complete file content"),
-    },
-    handler: async ({ path: target, content }, { cwd }) => {
-      const file = resolvePath(cwd, target as string);
-      const normalizedContent = normalizeJavaScriptQuotes(
-        file,
-        content as string,
-      );
-      await mkdir(path.dirname(file), { recursive: true });
-      await writeFile(file, normalizedContent, "utf8");
-      return { bytes_written: Buffer.byteLength(normalizedContent) };
-    },
-  },
-  {
-    name: "find_andor_edit",
-    description:
-      "Find or replace the closest case-insensitive match in a UTF-8 file. Requires one match at 90% or better; omit replacement to inspect only. After an edit, verify it with the returned review field instead of calling read_file merely to read the file again.",
-    inputSchema: {
-      content: z.string().min(1).describe("Existing content to find"),
+      content: z
+        .string()
+        .describe("Text to find; an empty string selects the whole file"),
       replacement: z
         .string()
         .optional()
-        .describe("New content to replace the match; omit to only find it"),
-      file: z.string().min(1).describe("File to search or edit"),
+        .describe("New content; omit to inspect the selection"),
+      file: z
+        .string()
+        .min(1)
+        .describe("File path"),
     },
     handler: async ({ content, replacement, file: target }, { cwd }) => {
       const file = resolvePath(cwd, target as string);
+      if (content === "") {
+        if (replacement === undefined) return readFile(file, "utf8");
+
+        const normalizedReplacement = normalizeJavaScriptQuotes(
+          file,
+          replacement as string,
+        );
+        await mkdir(path.dirname(file), { recursive: true });
+        await writeFile(file, normalizedReplacement, "utf8");
+        return { bytes_written: Buffer.byteLength(normalizedReplacement) };
+      }
+
       const query = content as string;
       const original = await readFile(file, "utf8");
       const matches = findBestMatches(original, query);
@@ -158,21 +143,29 @@ export const filesystemTools: ToolDefinition[] = [
           `Best match is ${percentage}%, below the required 90%; no changes made`,
         );
       }
-      if (matches.length > 1) {
+      if (replacement === undefined) {
+        return {
+          success: true,
+          matches: matches
+            .filter((match) => matchPercentage(match, query.length) >= 90)
+            .slice(0, 3)
+            .map((match) => ({
+              match_percentage: matchPercentage(match, query.length),
+              review: reviewAround(original, match.start, match.end),
+            })),
+        };
+      }
+
+      const tiedBest = matches.filter(
+        (match) => matchPercentage(match, query.length) === percentage,
+      );
+      if (tiedBest.length > 1) {
         throw new Error(
-          `Found ${matches.length} matches tied at ${percentage}%; no changes made`,
+          `Found ${tiedBest.length} matches tied at ${percentage}%; no changes made`,
         );
       }
 
       const match = matches[0]!;
-      if (replacement === undefined) {
-        return {
-          success: true,
-          match_percentage: percentage,
-          review: reviewAround(original, match.start, match.end),
-        };
-      }
-
       const normalizedReplacement = normalizeJavaScriptQuotes(
         file,
         replacement as string,

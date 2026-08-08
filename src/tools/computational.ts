@@ -12,7 +12,7 @@ export const computationalTools: ToolDefinition[] = [
   {
     name: "js_calculator",
     description:
-      "Evaluate JavaScript without Node.js APIs. Return the answer as the final expression, e.g. `const x = 2; x * 3` or `const xs = [1, 2]; xs.map(x => x * 2)`. Do not use console.log or top-level return.",
+      "Evaluate JavaScript without Node.js APIs. Put the answer in the final expression, for example `\"hello\".toUpperCase()` for a string or `const xs = [1, 2]; [xs.map(x => x * 2), xs.length]` for multiple values. Do not use console.log or top-level return.",
     inputSchema: {
       expression: z
         .string()
@@ -26,7 +26,7 @@ export const computationalTools: ToolDefinition[] = [
       const value = vm.runInNewContext(
         source,
         Object.create(null),
-        { timeout: 10_000, filename: "calculator.js" },
+        { timeout: 60_000, filename: "calculator.js" },
       );
       if (value === undefined) {
         throw Object.assign(
