@@ -45,11 +45,12 @@ async function handleMcp(
   const mcp = new McpServer(
     {
       name: "minimal-node-mcp",
-      version: "1.0.0",
+      version: "1.0.1",
     },
     {
       instructions:
         "Paths are relative to the server workspace unless absolute. " +
+        "Use find to read, search, create, or edit files; use run_cmd only when no other tool can perform the operation. " +
         "Tool failures are returned as MCP error results.",
     },
   );
