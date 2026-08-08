@@ -105,7 +105,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "text_editor")?.description ?? "",
-    /empty select.*whole-file writes create missing files and directories/,
+    /dedicated tool for all file-content work.*Always use this tool for file contents.*empty select.*Whole-file writes create missing files and directories/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",

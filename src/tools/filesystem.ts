@@ -103,7 +103,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "text_editor",
     description:
-      "Read or replace selected UTF-8 file content. An empty select targets the whole file. Omit replacement to read. Provide replacement to write; whole-file writes create missing files and directories.",
+      "The dedicated tool for all file-content work: read, create, search, and edit UTF-8 files. Always use this tool for file contents. select targets text; an empty select targets the whole file. Omit replacement to read; provide it to write. Whole-file writes create missing files and directories.",
     inputSchema: {
       file: z
         .string()
