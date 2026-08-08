@@ -27,7 +27,7 @@ function normalizeJavaScriptQuotes(file: string, content: string): string {
 
 type Match = { start: number; end: number; distance: number };
 
-function findBestMatches(source: string, query: string): Match[] {
+function rankMatches(source: string, query: string): Match[] {
   const text = source.toLocaleLowerCase();
   const pattern = query.toLocaleLowerCase();
   const width = text.length + 1;
@@ -101,13 +101,13 @@ function reviewAround(content: string, start: number, end: number): string {
 
 export const filesystemTools: ToolDefinition[] = [
   {
-    name: "find",
+    name: "text_editor",
     description:
-      "Find or replace text in a UTF-8 file. Omit replacement to return up to three fuzzy, case-insensitive matches scoring at least 90%; provide it to replace one unambiguous best match. Use empty content to select the whole file for reading or rewriting; whole-file writes create missing paths.",
+      "Search or replace text in a UTF-8 file. Omit replacement to return up to three fuzzy, case-insensitive matches scoring at least 90%; provide it to replace one unambiguous best match. Use empty content to select the whole file for reading or rewriting; whole-file writes create missing paths.",
     inputSchema: {
       content: z
         .string()
-        .describe("Text to find; an empty string selects the whole file"),
+        .describe("Text to search; an empty string selects the whole file"),
       replacement: z
         .string()
         .optional()
@@ -133,7 +133,7 @@ export const filesystemTools: ToolDefinition[] = [
 
       const query = content as string;
       const original = await readFile(file, "utf8");
-      const matches = findBestMatches(original, query);
+      const matches = rankMatches(original, query);
       const percentage = matches[0]
         ? matchPercentage(matches[0], query.length)
         : 0;

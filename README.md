@@ -53,11 +53,11 @@ command such as `cd project && npm test`.
 Models should use `run_cmd` for shell operations such as listing files (`ls`),
 creating directories (`mkdir dir`), deleting files (`rm file`), copying files
 (`cp a.txt b.txt`), moving files (`mv a.txt dir/`), and renaming files
-(`mv a.txt b.txt`). Use `find` for all UTF-8 file reads and writes. Its `file`
-field selects the path, `content` selects text to find, and providing
+(`mv a.txt b.txt`). Use `text_editor` for all UTF-8 file reads and writes. Its
+`file` field selects the path, `content` selects text to search, and providing
 `replacement` switches the tool from inspection to editing. Set `content` to an
 empty string and omit `replacement` to read a whole file; add `replacement` to
-create or completely rewrite one. A non-empty string always means ordinary find
+create or completely rewrite one. A non-empty string always means ordinary search
 mode, which returns up to three matches scoring at least 90%.
 This is especially important on Windows: a process started by `run_cmd` can keep
 a file open, and Windows will not allow a later shell command to delete that file
@@ -98,7 +98,7 @@ time only when you intentionally want to force the process to stop.
 
 ## Included tools
 
-- Filesystem: `find`
+- Filesystem: `text_editor`
 - Command: `run_cmd`
 - Computation: `js_calculator`
 - Real world: `get_current_time`
