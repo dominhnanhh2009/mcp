@@ -9,7 +9,7 @@ export const commandTools: ToolDefinition[] = [
   {
     name: "run_cmd",
     description:
-      "Run an unsandboxed shell command in the workspace. Use it for file operations such as listing (`ls`), creating directories (`mkdir dir`), deleting (`rm file`), copying (`cp a b`), moving, or renaming (`mv a b`).",
+      "Run an unsandboxed shell command as a last resort. NEVER use this tool when another provided tool can perform the operation. Suitable fallback operations include listing (`ls`), creating directories (`mkdir dir`), deleting (`rm file`), copying (`cp a b`), moving, or renaming (`mv a b`).",
     inputSchema: {
       command: z.string().min(1).describe("Shell command to execute"),
       timeout_ms: z
