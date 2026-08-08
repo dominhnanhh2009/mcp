@@ -103,7 +103,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "text_editor",
     description:
-      "The dedicated tool for all file-content work: read, create, search, and edit UTF-8 files. Always use this tool for file contents. Omit select to target the whole file; provide select to target text. Omit replacement to read; provide it to write. Whole-file writes create missing files and directories.",
+      "The dedicated tool for all file-content work: read, create, search, and edit UTF-8 files. Always use this tool for file contents. Omit select only when whole-file access is necessary; otherwise provide select for partial reads and edits. Omit replacement to read; provide it to write. Whole-file writes create missing files and directories. After an edit, verify with the returned review; NEVER reread the whole file just to verify it.",
     inputSchema: {
       file: z
         .string()

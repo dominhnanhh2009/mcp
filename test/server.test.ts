@@ -105,7 +105,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "text_editor")?.description ?? "",
-    /dedicated tool for all file-content work.*Always use this tool for file contents.*Omit select to target the whole file.*Whole-file writes create missing files and directories/,
+    /dedicated tool for all file-content work.*Omit select only when whole-file access is necessary.*partial reads and edits.*verify with the returned review.*NEVER reread the whole file/,
   );
   const textEditorSchema = result.tools.find(
     (tool) => tool.name === "text_editor",

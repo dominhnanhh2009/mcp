@@ -58,7 +58,9 @@ creating directories (`mkdir dir`), deleting files (`rm file`), copying files
 `replacement` switches the tool from inspection to editing. Omit `select` and
 `replacement` to read a whole file; add `replacement` to create or completely
 rewrite one. Providing `select` means ordinary search mode, which returns up to
-three matches scoring at least 90%.
+three matches scoring at least 90%. Prefer partial reads and edits; access the
+whole file only when necessary. Verify edits with the returned `review` instead
+of reading the whole file again.
 This is especially important on Windows: a process started by `run_cmd` can keep
 a file open, and Windows will not allow a later shell command to delete that file
 until the owning process exits.
