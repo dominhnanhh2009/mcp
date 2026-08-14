@@ -51,6 +51,7 @@ async function handleMcp(
       instructions:
         "Paths are relative to the server workspace unless absolute. " +
         "ALWAYS use text_editor to read, search, create, or edit files. Use run_cmd ONLY when no other tool can perform the operation. " +
+        "For existing files, prefer the smallest targeted replacement and preserve unrelated content, formatting, and structure. Use whole-file writes only for new files or intentional full rewrites; they create missing files and directories. After an edit, verify with the returned review; NEVER reread the whole file just to verify it. " +
         "Tool failures are returned as MCP error results.",
     },
   );

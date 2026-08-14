@@ -103,7 +103,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "text_editor",
     description:
-      "The dedicated tool for all file-content work: read, create, search, and edit UTF-8 files. Always use this tool for file contents. Include search_text to find existing text; do not include it for whole-file access. Include replacement to write; do not include it to read. Examples: read {file}; write {file, replacement}; search {file, search_text}; replace {file, search_text, replacement}. Whole-file writes create missing files and directories. After an edit, verify with the returned review; NEVER reread the whole file just to verify it.",
+      "Read, create, search, and edit UTF-8 files. Include search_text to search or replace; include replacement to write. Examples: read {file}; write {file, replacement}; search {file, search_text}; replace {file, search_text, replacement}.",
     inputSchema: {
       file: z
         .string()

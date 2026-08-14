@@ -86,6 +86,7 @@ test("lists all built-in tools", async () => {
     client.getInstructions(),
     "Paths are relative to the server workspace unless absolute. " +
       "ALWAYS use text_editor to read, search, create, or edit files. Use run_cmd ONLY when no other tool can perform the operation. " +
+      "For existing files, prefer the smallest targeted replacement and preserve unrelated content, formatting, and structure. Use whole-file writes only for new files or intentional full rewrites; they create missing files and directories. After an edit, verify with the returned review; NEVER reread the whole file just to verify it. " +
       "Tool failures are returned as MCP error results.",
   );
 
@@ -105,7 +106,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "text_editor")?.description ?? "",
-    /dedicated tool for all file-content work.*Include search_text to find existing text.*do not include it for whole-file access.*verify with the returned review.*NEVER reread the whole file/,
+    /Read, create, search, and edit UTF-8 files.*Include search_text to search or replace.*include replacement to write.*Examples: read.*write.*search.*replace/,
   );
   const textEditorSchema = result.tools.find(
     (tool) => tool.name === "text_editor",
