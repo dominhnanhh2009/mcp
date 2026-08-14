@@ -103,25 +103,27 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "text_editor",
     description:
-      "The dedicated tool for all file-content work: read, create, search, and edit UTF-8 files. Always use this tool for file contents. Omit select only when whole-file access is necessary; otherwise provide select for partial reads and edits. Omit replacement to read; provide it to write. Whole-file writes create missing files and directories. After an edit, verify with the returned review; NEVER reread the whole file just to verify it.",
+      "The dedicated tool for all file-content work: read, create, search, and edit UTF-8 files. Always use this tool for file contents. Include search_text to find existing text; do not include it for whole-file access. Include replacement to write; do not include it to read. Examples: read {file}; write {file, replacement}; search {file, search_text}; replace {file, search_text, replacement}. Whole-file writes create missing files and directories. After an edit, verify with the returned review; NEVER reread the whole file just to verify it.",
     inputSchema: {
       file: z
         .string()
         .min(1)
         .describe("Target file path"),
-      select: z
+      search_text: z
         .string()
         .min(1)
         .optional()
-        .describe("Text to select; omit to select the whole file"),
+        .describe(
+          "Exact existing text to find in the file. Never put new file content here.",
+        ),
       replacement: z
         .string()
         .optional()
-        .describe("Text to replace the selection; omit to read"),
+        .describe("Replacement text; do not include to read"),
     },
-    handler: async ({ file: target, select, replacement }, { cwd }) => {
+    handler: async ({ file: target, search_text, replacement }, { cwd }) => {
       const file = resolvePath(cwd, target as string);
-      if (select === undefined) {
+      if (search_text === undefined) {
         if (replacement === undefined) return readFile(file, "utf8");
 
         const normalizedReplacement = normalizeJavaScriptQuotes(
@@ -133,7 +135,7 @@ export const filesystemTools: ToolDefinition[] = [
         return { bytes_written: Buffer.byteLength(normalizedReplacement) };
       }
 
-      const query = select as string;
+      const query = search_text as string;
       const original = await readFile(file, "utf8");
       const matches = rankMatches(original, query);
       const percentage = matches[0]

@@ -54,13 +54,11 @@ Models should use `run_cmd` for shell operations such as listing files (`ls`),
 creating directories (`mkdir dir`), deleting files (`rm file`), copying files
 (`cp a.txt b.txt`), moving files (`mv a.txt dir/`), and renaming files
 (`mv a.txt b.txt`). Use `text_editor` for all UTF-8 file reads and writes. Its
-`file` field selects the path, `select` selects text to search, and providing
-`replacement` switches the tool from inspection to editing. Omit `select` and
-`replacement` to read a whole file; add `replacement` to create or completely
-rewrite one. Providing `select` means ordinary search mode, which returns up to
-three matches scoring at least 90%. Prefer partial reads and edits; access the
-whole file only when necessary. Verify edits with the returned `review` instead
-of reading the whole file again.
+`file` sets the path. `search_text` is exact existing text to find; never put new
+file content there. Include `replacement` to write; do not include it to read.
+Do not include `search_text` for whole-file reads or writes. Search mode returns
+up to three matches scoring at least 90%. Prefer partial reads and edits. Verify
+edits with the returned `review` instead of reading the whole file again.
 This is especially important on Windows: a process started by `run_cmd` can keep
 a file open, and Windows will not allow a later shell command to delete that file
 until the owning process exits.

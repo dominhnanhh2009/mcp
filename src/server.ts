@@ -50,7 +50,7 @@ async function handleMcp(
     {
       instructions:
         "Paths are relative to the server workspace unless absolute. " +
-        "Use text_editor to read, search, create, or edit files; use run_cmd only when no other tool can perform the operation. " +
+        "ALWAYS use text_editor to read, search, create, or edit files. Use run_cmd ONLY when no other tool can perform the operation. " +
         "Tool failures are returned as MCP error results.",
     },
   );

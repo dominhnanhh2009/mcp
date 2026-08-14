@@ -85,7 +85,7 @@ test("lists all built-in tools", async () => {
   assert.equal(
     client.getInstructions(),
     "Paths are relative to the server workspace unless absolute. " +
-      "Use text_editor to read, search, create, or edit files; use run_cmd only when no other tool can perform the operation. " +
+      "ALWAYS use text_editor to read, search, create, or edit files. Use run_cmd ONLY when no other tool can perform the operation. " +
       "Tool failures are returned as MCP error results.",
   );
 
@@ -105,16 +105,16 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "text_editor")?.description ?? "",
-    /dedicated tool for all file-content work.*Omit select only when whole-file access is necessary.*partial reads and edits.*verify with the returned review.*NEVER reread the whole file/,
+    /dedicated tool for all file-content work.*Include search_text to find existing text.*do not include it for whole-file access.*verify with the returned review.*NEVER reread the whole file/,
   );
   const textEditorSchema = result.tools.find(
     (tool) => tool.name === "text_editor",
   )?.inputSchema as {
     required?: string[];
-    properties?: { select?: { minLength?: number } };
+    properties?: { search_text?: { minLength?: number } };
   };
   assert.deepEqual(textEditorSchema.required, ["file"]);
-  assert.equal(textEditorSchema.properties?.select?.minLength, 1);
+  assert.equal(textEditorSchema.properties?.search_text?.minLength, 1);
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
     /final expression/,
@@ -192,7 +192,7 @@ test("finds case-insensitively and replaces one closest match", async () => {
     name: "text_editor",
     arguments: {
       file: "notes/search.txt",
-      select: "the quick brown fix",
+      search_text: "the quick brown fix",
       replacement: "the slow fox",
     },
   });
@@ -217,7 +217,7 @@ test("text_editor does not edit ambiguous or low-confidence matches", async () =
     name: "text_editor",
     arguments: {
       file: "notes/ambiguous.txt",
-      select: "repeat me",
+      search_text: "repeat me",
       replacement: "changed",
     },
   });
@@ -232,7 +232,7 @@ test("text_editor does not edit ambiguous or low-confidence matches", async () =
     name: "text_editor",
     arguments: {
       file: "notes/ambiguous.txt",
-      select: "completely unrelated content",
+      search_text: "completely unrelated content",
       replacement: "changed",
     },
   });
@@ -255,7 +255,7 @@ test("search mode returns up to three high-confidence matches", async () => {
 
   const result = await client.callTool({
     name: "text_editor",
-    arguments: { file: "notes/matches.txt", select: "target" },
+    arguments: { file: "notes/matches.txt", search_text: "target" },
   });
   const response = JSON.parse(firstText(result));
   assert.equal(response.success, true);
@@ -278,7 +278,10 @@ test("treats WHOLE_FILE as ordinary searchable text", async () => {
 
   const result = await client.callTool({
     name: "text_editor",
-    arguments: { file: "notes/literal-sentinel.txt", select: "WHOLE_FILE" },
+    arguments: {
+      file: "notes/literal-sentinel.txt",
+      search_text: "WHOLE_FILE",
+    },
   });
   const response = JSON.parse(firstText(result));
   assert.equal(response.matches[0].match_percentage, 100);
@@ -294,7 +297,7 @@ test("text_editor normalizes typographic quotes only for JavaScript files", asyn
     name: "text_editor",
     arguments: {
       file: "edit.js",
-      select: "'old'",
+      search_text: "'old'",
       replacement: "“new”",
     },
   });
