@@ -123,7 +123,11 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
-    /Do not use console\.log/,
+    /NEVER use console\.log/,
+  );
+  assert.match(
+    result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
+    /object \(recommended\), an array, or a string/,
   );
 });
 
