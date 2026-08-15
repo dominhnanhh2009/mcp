@@ -46,6 +46,9 @@ The configured workspace and its files still persist for the lifetime of the
 server process (and on disk afterward).
 
 Each `run_cmd` call starts a new shell process in the configured workspace.
+Its tool description identifies the execution shell detected for the host
+(`cmd.exe` on Windows and `/bin/sh` on Unix-like systems) and shows commands
+that match that shell.
 Shell-local state such as `cd`, aliases, and environment variables does not carry
 over to later tool calls. To work in a subdirectory for one command, use a single
 command such as `cd project && npm test`.
@@ -54,6 +57,8 @@ Models should use `run_cmd` for shell operations such as listing files (`ls`),
 creating directories (`mkdir dir`), deleting files (`rm file`), copying files
 (`cp a.txt b.txt`), moving files (`mv a.txt dir/`), and renaming files
 (`mv a.txt b.txt`). Use `text_editor` for all UTF-8 file reads and writes. Its
+description explicitly rejects shell patterns such as `cat file`,
+`echo text > file`, `echo text >> file`, and `>>` redirection for that purpose.
 `file` sets the path. `search_text` is exact existing text to find; never put new
 file content there. Include `replacement` to write; do not include it to read.
 Do not include `search_text` for whole-file reads or writes. Search mode returns

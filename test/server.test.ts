@@ -103,7 +103,19 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "run_cmd")?.description ?? "",
-    /NEVER use this tool when another provided tool.*only when all other tools are unsuitable.*Examples: listing \(`ls`\).*renaming \(`mv a b`\)/,
+    /NEVER use this tool when another provided tool.*only when all other tools are unsuitable.*Use it for shell-only operations/,
+  );
+  const runCmdDescription =
+    result.tools.find((tool) => tool.name === "run_cmd")?.description ?? "";
+  assert.match(
+    runCmdDescription,
+    process.platform === "win32"
+      ? /Windows cmd\.exe.*listing \(`dir`\).*renaming \(`move a b`\)/i
+      : /\/bin\/sh.*listing \(`ls`\).*renaming \(`mv a b`\)/,
+  );
+  assert.match(
+    runCmdDescription,
+    /NEVER use shell file-reading or file-writing commands.*`cat file`.*`echo text > file`.*`echo text >> file`.*`>>` redirection operator.*use `text_editor`/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "text_editor")?.description ?? "",
