@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, test } from "node:test";
@@ -95,6 +95,7 @@ test("lists all built-in tools", async () => {
     result.tools.map((tool) => tool.name),
     [
       "text_editor",
+      "image_viewer",
       "run_cmd",
       "js_calculator",
       "get_current_time",
@@ -124,6 +125,24 @@ test("lists all built-in tools", async () => {
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
     /Do not use console\.log/,
   );
+});
+
+test("returns base64 image content directly", async () => {
+  const image = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+  await writeFile(path.join(workspace, "sample.png"), image);
+
+  const result = await client.callTool({
+    name: "image_viewer",
+    arguments: { file: "sample.png" },
+  });
+
+  assert.deepEqual(result.content, [
+    {
+      type: "image",
+      data: image.toString("base64"),
+      mimeType: "image/png",
+    },
+  ]);
 });
 
 test("creates and reads a whole file through text_editor", async () => {

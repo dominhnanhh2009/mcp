@@ -17,6 +17,15 @@ export interface ToolDefinition<TInput extends ZodRawShape = ZodRawShape> {
   ) => unknown | Promise<unknown>;
 }
 
+function isDirectResult(value: unknown): value is CallToolResult {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "content" in value &&
+    Array.isArray(value.content)
+  );
+}
+
 function asResult(value: unknown): CallToolResult {
   const text =
     typeof value === "string" ? value : JSON.stringify(value, null, 2);
@@ -88,7 +97,8 @@ export function registerTools(
       },
       async (input) => {
         try {
-          return asResult(await tool.handler(input, context));
+          const result = await tool.handler(input, context);
+          return isDirectResult(result) ? result : asResult(result);
         } catch (error) {
           return asErrorResult(error);
         }
