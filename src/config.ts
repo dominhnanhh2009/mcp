@@ -3,6 +3,7 @@ import path from "node:path";
 export interface AppConfig {
   port: number;
   cwd: string;
+  llamaServerUrl?: string;
 }
 
 function defaultWorkspace(): string {
@@ -40,5 +41,6 @@ export function parseConfig(args = process.argv.slice(2)): AppConfig {
   return {
     port,
     cwd: cwdFlag ? path.resolve(process.cwd(), cwdFlag) : defaultWorkspace(),
+    llamaServerUrl: readFlag(args, "--llama-server-url"),
   };
 }

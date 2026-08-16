@@ -4,7 +4,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import type { AppConfig } from "./config.js";
 import { registerTools } from "./tool-registry.js";
-import { tools } from "./tools/index.js";
+import { tools, withAdditionalTools } from "./tools/index.js";
+import { startMemory, type MemoryRuntime } from "./memory/index.js";
+
+export interface RunningServer extends ReturnType<typeof createServer> {
+  loadedTools: typeof tools;
+  memory?: MemoryRuntime;
+}
 
 function addCorsHeaders(
   request: IncomingMessage,
@@ -41,6 +47,7 @@ async function handleMcp(
   request: IncomingMessage,
   response: ServerResponse,
   cwd: string,
+  loadedTools: typeof tools,
 ): Promise<void> {
   const mcp = new McpServer(
     {
@@ -55,7 +62,7 @@ async function handleMcp(
         "Tool failures are returned as MCP error results.",
     },
   );
-  registerTools(mcp, tools, { cwd });
+  registerTools(mcp, loadedTools, { cwd });
 
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
@@ -73,6 +80,8 @@ async function handleMcp(
 
 export async function startServer(config: AppConfig) {
   await mkdir(config.cwd, { recursive: true });
+  const memory = await startMemory(config.cwd, config.llamaServerUrl);
+  const loadedTools = withAdditionalTools(memory?.tools);
 
   const server = createServer(async (request, response) => {
     try {
@@ -90,7 +99,8 @@ export async function startServer(config: AppConfig) {
           status: "ok",
           endpoint: "/mcp",
           cwd: config.cwd,
-          tools: tools.map((tool) => tool.name),
+          tools: loadedTools.map((tool) => tool.name),
+          memory_model: memory?.model,
         });
         return;
       }
@@ -106,7 +116,7 @@ export async function startServer(config: AppConfig) {
         return;
       }
 
-      await handleMcp(request, response, config.cwd);
+      await handleMcp(request, response, config.cwd, loadedTools);
     } catch (error) {
       console.error(error);
       if (!response.headersSent) {
@@ -119,10 +129,19 @@ export async function startServer(config: AppConfig) {
     }
   });
 
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(config.port, "0.0.0.0", resolve);
-  });
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(config.port, "0.0.0.0", resolve);
+    });
+  } catch (error) {
+    memory?.stop();
+    throw error;
+  }
 
-  return server;
+  server.on("close", () => memory?.stop());
+  const running = server as RunningServer;
+  running.loadedTools = loadedTools;
+  running.memory = memory;
+  return running;
 }

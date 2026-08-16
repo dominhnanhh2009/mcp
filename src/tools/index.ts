@@ -14,3 +14,9 @@ export const tools: ToolDefinition[] = [
   ...computationalTools,
   ...realworldTools,
 ];
+
+export function withAdditionalTools(
+  additional: ToolDefinition[] = [],
+): ToolDefinition[] {
+  return [...tools, ...additional];
+}

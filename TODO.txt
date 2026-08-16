@@ -1,0 +1,1 @@
+ - thêm tools RAG "memories", crud/query các chunk (embed qdrant.exe vào project). cần flag riêng để set base url cho llama-server, còn lại mcp tự detect và dùng 1 model embed BẤT KỲ (có in ra mcp server đã chọn dùng model nào). nếu ko đưa flag set url thì các tool hệ này sẽ ko được kích hoạt (tắt, ko đưa khai báo và cũng ko thực thi)

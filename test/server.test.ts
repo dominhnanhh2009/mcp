@@ -53,6 +53,14 @@ test("uses a server-start timestamp as the default workspace name", () => {
   assert.match(path.basename(config.cwd), /^\d{6}-\d{6}$/);
 });
 
+test("reads the optional llama-server URL", () => {
+  assert.equal(
+    parseConfig(["--llama-server-url", "http://127.0.0.1:3333"]).llamaServerUrl,
+    "http://127.0.0.1:3333",
+  );
+  assert.equal(parseConfig([]).llamaServerUrl, undefined);
+});
+
 test("allows browser requests from every origin", async () => {
   const response = await fetch(`${baseUrl}/mcp`, {
     method: "OPTIONS",

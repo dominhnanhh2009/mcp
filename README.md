@@ -28,6 +28,14 @@ Choose another workspace or port:
 npm start -- --cwd ./my-workspace --port 6000
 ```
 
+Enable durable semantic memory through a running `llama-server`:
+
+```powershell
+npm start -- --llama-server-url http://127.0.0.1:8080
+```
+
+The memory tools are registered only when the URL is supplied and a working model whose ID contains `embed` is found. This name-based heuristic can produce false positives and false negatives, so the server prints a startup warning and verifies the selected model with an embedding request. On first use the server downloads Qdrant for Windows x64 into the ignored `runtime/qdrant` directory, then stores memory data under `<workspace>/.memory`.
+
 `--cwd` is resolved from the project root/current launch directory. When omitted,
 the server creates:
 
@@ -107,6 +115,7 @@ time only when you intentionally want to force the process to stop.
 - Command: `run_cmd`
 - Computation: `js_calculator`
 - Real world: `get_current_time`
+- Optional memory: `memory_query`, `remember`, `forget`
 
 There is intentionally no command sandbox or path restriction.
 
