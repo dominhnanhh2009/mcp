@@ -1,0 +1,8 @@
+{
+  "DEFAULT_CURRENCY": "VND",
+  "SUPPORTED": [
+    "USD",
+    "EUR",
+    "VND"
+  ]
+}

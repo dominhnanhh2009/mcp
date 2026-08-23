@@ -1,0 +1,250 @@
+[
+  {
+    "id": "CASE_01",
+    "title": "FactorizedNumber (fact.js)",
+    "turns": 8,
+    "createdFiles": [
+      "fact.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 3,
+    "usedReadCount": 1,
+    "usedRunCmdCount": 2,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('fact.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "READ_FILE ('fact.js')",
+      "EDIT_FILE ('fact.js')",
+      "EDIT_FILE ('fact.js')"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "CASE_02",
+    "title": "Stack (stack.js)",
+    "turns": 8,
+    "createdFiles": [
+      "stack.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 2,
+    "usedReadCount": 0,
+    "usedRunCmdCount": 3,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('stack.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('stack.js')",
+      "RUN_CMD (\"node test.js\")"
+    ],
+    "finalSuccess": true
+  },
+  {
+    "id": "CASE_03",
+    "title": "Queue (queue.js)",
+    "turns": 8,
+    "createdFiles": [
+      "queue.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 3,
+    "usedReadCount": 0,
+    "usedRunCmdCount": 3,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('queue.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('queue.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "CASE_04",
+    "title": "LRU Cache (lru.js)",
+    "turns": 8,
+    "createdFiles": [
+      "lru.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 3,
+    "usedReadCount": 0,
+    "usedRunCmdCount": 3,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('lru.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('lru.js')"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "CASE_05",
+    "title": "String Utils (str_utils.js)",
+    "turns": 8,
+    "createdFiles": [
+      "str_utils.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 2,
+    "usedReadCount": 1,
+    "usedRunCmdCount": 3,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('str_utils.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "READ_FILE ('str_utils.js')",
+      "EDIT_FILE ('str_utils.js')",
+      "RUN_CMD (\"node test.js\")"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "CASE_06",
+    "title": "Matrix 2D (matrix.js)",
+    "turns": 8,
+    "createdFiles": [
+      "matrix.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 3,
+    "usedReadCount": 1,
+    "usedRunCmdCount": 2,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('matrix.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('matrix.js')",
+      "READ_FILE ('matrix.js')",
+      "EDIT_FILE ('matrix.js')",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "CASE_07",
+    "title": "Simple EventEmitter (events.js)",
+    "turns": 8,
+    "createdFiles": [
+      "events.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 2,
+    "usedReadCount": 1,
+    "usedRunCmdCount": 3,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('events.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('events.js')",
+      "RUN_CMD (\"node test.js\")",
+      "READ_FILE ('test.js')"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "CASE_08",
+    "title": "Binary Search Tree (bst.js)",
+    "turns": 8,
+    "createdFiles": [
+      "bst.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 2,
+    "usedReadCount": 0,
+    "usedRunCmdCount": 3,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('bst.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('bst.js')",
+      "RUN_CMD (\"node test.js\")"
+    ],
+    "finalSuccess": true
+  },
+  {
+    "id": "CASE_09",
+    "title": "Vector2D (vector.js)",
+    "turns": 8,
+    "createdFiles": [
+      "vector.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 2,
+    "usedReadCount": 1,
+    "usedRunCmdCount": 3,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('vector.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "READ_FILE ('vector.js')"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "CASE_10",
+    "title": "Currency Converter (currency.js)",
+    "turns": 8,
+    "createdFiles": [
+      "currency.js",
+      "test.js"
+    ],
+    "usedCreateCount": 2,
+    "usedEditCount": 3,
+    "usedReadCount": 0,
+    "usedRunCmdCount": 3,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('currency.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('currency.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('currency.js')"
+    ],
+    "finalSuccess": false
+  }
+]

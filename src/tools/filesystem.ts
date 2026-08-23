@@ -82,7 +82,20 @@ function rankMatches(source: string, query: string): Match[] {
     (left, right) =>
       similarity(right) - similarity(left) || left.start - right.start,
   );
-  return ranked;
+
+  const nonOverlapping: Match[] = [];
+  for (const match of ranked) {
+    const overlaps = nonOverlapping.some(
+      (existing) =>
+        Math.max(existing.start, match.start) <
+        Math.min(existing.end, match.end),
+    );
+    if (!overlaps) {
+      nonOverlapping.push(match);
+    }
+  }
+
+  return nonOverlapping;
 }
 
 function matchPercentage(match: Match, queryLength: number): number {
@@ -103,7 +116,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "text_editor",
     description:
-      "Read, create, search, and edit UTF-8 files. Include search_text to search or replace; include replacement to write. Examples: read {file}; write {file, replacement}; search {file, search_text}; replace {file, search_text, replacement}.",
+      "Read, create, search, and edit UTF-8 files. read {file}; search {file, search_text: content to search}; edit {file, search_text: old_text, replacement: new_text}; write {file, replacement: content to write}.",
     inputSchema: {
       file: z
         .string()
@@ -114,7 +127,7 @@ export const filesystemTools: ToolDefinition[] = [
         .min(1)
         .optional()
         .describe(
-          "Exact existing text to find in the file. Never put new file content here.",
+          "Content to find in the file. Never put new file content here.",
         ),
       replacement: z
         .string()

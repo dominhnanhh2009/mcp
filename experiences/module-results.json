@@ -1,0 +1,188 @@
+[
+  {
+    "id": "S1_P1",
+    "side": "SIDE_1_MODULE_DIRECT",
+    "pairId": 1,
+    "title": "Mismatched CJS/ESM Export",
+    "turns": 5,
+    "usedReplace": false,
+    "usedWrite": true,
+    "usedReadAfterWrite": true,
+    "usedRunCmd": false,
+    "actions": [
+      "SEARCH",
+      "READ_ALL",
+      "WRITE_ALL",
+      "READ_ALL"
+    ],
+    "finalSuccess": true
+  },
+  {
+    "id": "S1_P2",
+    "side": "SIDE_1_MODULE_DIRECT",
+    "pairId": 2,
+    "title": "Named vs Default Export mismatch",
+    "turns": 6,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "usedRunCmd": false,
+    "actions": [
+      "SEARCH",
+      "READ_ALL",
+      "READ_ALL",
+      "REPLACE",
+      "SEARCH"
+    ],
+    "finalSuccess": true
+  },
+  {
+    "id": "S1_P3",
+    "side": "SIDE_1_MODULE_DIRECT",
+    "pairId": 3,
+    "title": "Missing relative path prefix in require",
+    "turns": 6,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "usedRunCmd": false,
+    "actions": [
+      "REPLACE",
+      "READ_ALL",
+      "REPLACE",
+      "READ_ALL",
+      "REPLACE",
+      "READ_ALL"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "S1_P4",
+    "side": "SIDE_1_MODULE_DIRECT",
+    "pairId": 4,
+    "title": "Typo in exported object keys",
+    "turns": 3,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "usedRunCmd": false,
+    "actions": [
+      "READ_ALL",
+      "REPLACE"
+    ],
+    "finalSuccess": true
+  },
+  {
+    "id": "S1_P5",
+    "side": "SIDE_1_MODULE_DIRECT",
+    "pairId": 5,
+    "title": "ESM export default in CJS environment",
+    "turns": 2,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "usedRunCmd": false,
+    "actions": [
+      "REPLACE"
+    ],
+    "finalSuccess": true
+  },
+  {
+    "id": "S2_P1",
+    "side": "SIDE_2_EMERGENT_DEBUG",
+    "pairId": 1,
+    "title": "Mismatched CJS/ESM Export",
+    "turns": 5,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "usedRunCmd": true,
+    "actions": [
+      "RUN_CMD(\"node app.js\")",
+      "READ_ALL",
+      "REPLACE",
+      "RUN_CMD(\"node app.js\")"
+    ],
+    "finalSuccess": true
+  },
+  {
+    "id": "S2_P2",
+    "side": "SIDE_2_EMERGENT_DEBUG",
+    "pairId": 2,
+    "title": "Named vs Default Export mismatch",
+    "turns": 6,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "usedRunCmd": true,
+    "actions": [
+      "RUN_CMD(\"node index.js\")",
+      "READ_ALL",
+      "REPLACE",
+      "RUN_CMD(\"node index.js\")",
+      "RUN_CMD(\"dir D:\\DoMinhhAnhh\\codes\\mcp\\experiences\\module_sandbox\\s2_p2\\logger*\")",
+      "REPLACE"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "S2_P3",
+    "side": "SIDE_2_EMERGENT_DEBUG",
+    "pairId": 3,
+    "title": "Missing relative path prefix in require",
+    "turns": 6,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "usedRunCmd": true,
+    "actions": [
+      "RUN_CMD(\"node main.js\")",
+      "READ_ALL",
+      "REPLACE",
+      "RUN_CMD(\"node main.js\")",
+      "READ_ALL",
+      "RUN_CMD(\"dir D:\\DoMinhhAnhh\\codes\\mcp\\experiences\\module_sandbox\\s2_p3\")"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "S2_P4",
+    "side": "SIDE_2_EMERGENT_DEBUG",
+    "pairId": 4,
+    "title": "Typo in exported object keys",
+    "turns": 6,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "usedRunCmd": true,
+    "actions": [
+      "RUN_CMD(\"node server.js\")",
+      "READ_ALL",
+      "REPLACE",
+      "RUN_CMD(\"node server.js\")",
+      "READ_ALL",
+      "RUN_CMD(\"dir \"D:\\DoMinhhAnhh\\codes\\mcp\\experiences\\module_sandbox\\s2_p4\"\")"
+    ],
+    "finalSuccess": false
+  },
+  {
+    "id": "S2_P5",
+    "side": "SIDE_2_EMERGENT_DEBUG",
+    "pairId": 5,
+    "title": "ESM export default in CJS environment",
+    "turns": 6,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "usedRunCmd": true,
+    "actions": [
+      "RUN_CMD(\"node db.js\")",
+      "READ_ALL",
+      "REPLACE",
+      "RUN_CMD(\"node db.js\")",
+      "READ_ALL",
+      "READ_ALL"
+    ],
+    "finalSuccess": false
+  }
+]

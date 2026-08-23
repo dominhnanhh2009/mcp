@@ -127,7 +127,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "text_editor")?.description ?? "",
-    /Read, create, search, and edit UTF-8 files.*Include search_text to search or replace.*include replacement to write.*Examples: read.*write.*search.*replace/,
+    /Read, create, search, and edit UTF-8 files\.\s*read \{file\};\s*search \{file,\s*search_text:\s*content to search\};\s*edit \{file,\s*search_text:\s*old_text,\s*replacement:\s*new_text\};\s*write \{file,\s*replacement:\s*content to write\}/,
   );
   const textEditorSchema = result.tools.find(
     (tool) => tool.name === "text_editor",
@@ -286,6 +286,28 @@ test("text_editor does not edit ambiguous or low-confidence matches", async () =
     await readFile(path.join(workspace, "notes/ambiguous.txt"), "utf8"),
     ambiguous,
   );
+});
+
+test("search mode does not duplicate overlapping matches for a single occurrence", async () => {
+  await client.callTool({
+    name: "text_editor",
+    arguments: {
+      file: "notes/single-match.txt",
+      replacement: "some prefix longuniquepattern some suffix",
+    },
+  });
+
+  const result = await client.callTool({
+    name: "text_editor",
+    arguments: {
+      file: "notes/single-match.txt",
+      search_text: "longuniquepattern",
+    },
+  });
+  const response = JSON.parse(firstText(result));
+  assert.equal(response.success, true);
+  assert.equal(response.matches.length, 1);
+  assert.equal(response.matches[0].match_percentage, 100);
 });
 
 test("search mode returns up to three high-confidence matches", async () => {

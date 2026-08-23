@@ -1,0 +1,442 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+// Exact same logic as src/tools/filesystem.ts
+const javascriptExtensions = new Set([
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".tsx",
+  ".mts",
+  ".cts",
+]);
+
+function normalizeJavaScriptQuotes(file: string, content: string): string {
+  if (!javascriptExtensions.has(path.extname(file).toLowerCase())) return content;
+  return content
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"');
+}
+
+type Match = { start: number; end: number; distance: number };
+
+function rankMatches(source: string, query: string): Match[] {
+  const text = source.toLocaleLowerCase();
+  const pattern = query.toLocaleLowerCase();
+  const width = text.length + 1;
+  let distances = Array.from({ length: width }, () => 0);
+  let starts = Array.from({ length: width }, (_, index) => index);
+
+  for (let row = 1; row <= pattern.length; row += 1) {
+    const nextDistances = new Array<number>(width);
+    const nextStarts = new Array<number>(width);
+    nextDistances[0] = row;
+    nextStarts[0] = 0;
+
+    for (let column = 1; column < width; column += 1) {
+      const candidates = [
+        {
+          distance:
+            distances[column - 1]! +
+            (pattern[row - 1] === text[column - 1] ? 0 : 1),
+          start: starts[column - 1]!,
+        },
+        { distance: distances[column]! + 1, start: starts[column]! },
+        {
+          distance: nextDistances[column - 1]! + 1,
+          start: nextStarts[column - 1]!,
+        },
+      ];
+      candidates.sort(
+        (left, right) =>
+          left.distance - right.distance || right.start - left.start,
+      );
+      nextDistances[column] = candidates[0]!.distance;
+      nextStarts[column] = candidates[0]!.start;
+    }
+
+    distances = nextDistances;
+    starts = nextStarts;
+  }
+
+  const matches = new Map<string, Match>();
+  for (let end = 1; end < width; end += 1) {
+    const start = starts[end]!;
+    if (end <= start) continue;
+    const match = { start, end, distance: distances[end]! };
+    const key = `${start}:${end}`;
+    const existing = matches.get(key);
+    if (!existing || match.distance < existing.distance) matches.set(key, match);
+  }
+
+  const similarity = (match: Match) =>
+    1 - match.distance / Math.max(pattern.length, match.end - match.start);
+  const ranked = [...matches.values()].sort(
+    (left, right) =>
+      similarity(right) - similarity(left) || left.start - right.start,
+  );
+
+  const nonOverlapping: Match[] = [];
+  for (const match of ranked) {
+    const overlaps = nonOverlapping.some(
+      (existing) =>
+        Math.max(existing.start, match.start) <
+        Math.min(existing.end, match.end),
+    );
+    if (!overlaps) {
+      nonOverlapping.push(match);
+    }
+  }
+
+  return nonOverlapping;
+}
+
+function matchPercentage(match: Match, queryLength: number): number {
+  const similarity =
+    1 - match.distance / Math.max(queryLength, match.end - match.start);
+  return Math.round(similarity * 10_000) / 100;
+}
+
+function reviewAround(content: string, start: number, end: number): string {
+  const contextLength = 50;
+  return content.slice(
+    Math.max(0, start - contextLength),
+    Math.min(content.length, end + contextLength),
+  );
+}
+
+async function executeTextEditor(
+  cwd: string,
+  args: { file: string; search_text?: string; replacement?: string },
+) {
+  const file = path.isAbsolute(args.file)
+    ? path.normalize(args.file)
+    : path.resolve(cwd, args.file);
+
+  if (args.search_text === undefined) {
+    if (args.replacement === undefined) {
+      const content = await readFile(file, "utf8");
+      return content;
+    }
+
+    const normalizedReplacement = normalizeJavaScriptQuotes(
+      file,
+      args.replacement,
+    );
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(file, normalizedReplacement, "utf8");
+    return JSON.stringify({
+      bytes_written: Buffer.byteLength(normalizedReplacement),
+    });
+  }
+
+  const query = args.search_text;
+  const original = await readFile(file, "utf8");
+  const matches = rankMatches(original, query);
+  const percentage = matches[0] ? matchPercentage(matches[0], query.length) : 0;
+
+  if (percentage < 90) {
+    return JSON.stringify({
+      error: `Best match is ${percentage}%, below the required 90%; no changes made`,
+    });
+  }
+
+  if (args.replacement === undefined) {
+    return JSON.stringify({
+      success: true,
+      matches: matches
+        .filter((match) => matchPercentage(match, query.length) >= 90)
+        .slice(0, 3)
+        .map((match) => ({
+          match_percentage: matchPercentage(match, query.length),
+          review: reviewAround(original, match.start, match.end),
+        })),
+    });
+  }
+
+  const tiedBest = matches.filter(
+    (match) => matchPercentage(match, query.length) === percentage,
+  );
+  if (tiedBest.length > 1) {
+    return JSON.stringify({
+      error: `Found ${tiedBest.length} matches tied at ${percentage}%; no changes made`,
+    });
+  }
+
+  const match = matches[0]!;
+  const normalizedReplacement = normalizeJavaScriptQuotes(
+    file,
+    args.replacement,
+  );
+  const updated =
+    original.slice(0, match.start) +
+    normalizedReplacement +
+    original.slice(match.end);
+  await writeFile(file, updated, "utf8");
+  return JSON.stringify({
+    success: true,
+    match_percentage: percentage,
+    review: reviewAround(
+      updated,
+      match.start,
+      match.start + normalizedReplacement.length,
+    ),
+  });
+}
+
+const TOOLS_SCHEMA = [
+  {
+    type: "function",
+    function: {
+      name: "text_editor",
+      description:
+        "Read, create, search, and edit UTF-8 files. read {file}; search {file, search_text: content to search}; edit {file, search_text: old_text, replacement: new_text}; write {file, replacement: content to write}.",
+      parameters: {
+        type: "object",
+        properties: {
+          file: {
+            type: "string",
+            minLength: 1,
+            description: "Target file path",
+          },
+          search_text: {
+            description:
+              "Content to find in the file. Never put new file content here.",
+            type: "string",
+            minLength: 1,
+          },
+          replacement: {
+            description: "Replacement text; do not include to read",
+            type: "string",
+          },
+        },
+        required: ["file"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "run_cmd",
+      description:
+        "Run an unsandboxed command with Windows cmd.exe. NEVER use this tool when another provided tool can perform the operation. Use it only when all other tools are unsuitable. NEVER use shell file-reading or file-writing commands such as `cat file`, `echo text > file`, `echo text >> file`, or the `>>` redirection operator; use `text_editor` to read, create, or edit files instead.",
+      parameters: {
+        type: "object",
+        properties: {
+          command: {
+            type: "string",
+            minLength: 1,
+            description: "Shell command to execute",
+          },
+          timeout_ms: {
+            default: 30000,
+            description: "Maximum run time in milliseconds",
+            type: "integer",
+          },
+        },
+        required: ["command"],
+      },
+    },
+  },
+];
+
+const SYSTEM_PROMPT =
+  "Paths are relative to the server workspace unless absolute. " +
+  "ALWAYS use text_editor to read, search, create, or edit files. Use run_cmd ONLY when no other tool can perform the operation. " +
+  "For existing files, prefer the smallest targeted replacement and preserve unrelated content, formatting, and structure. Use whole-file writes only for new files or intentional full rewrites; they create missing files and directories. After an edit, verify with the returned review; NEVER reread the whole file just to verify it. " +
+  "Tool failures are returned as MCP error results.";
+
+async function runTestCase(
+  caseName: string,
+  cwd: string,
+  userPrompt: string,
+  setupFiles: Record<string, string>,
+) {
+  console.log(`\n${"=".repeat(60)}`);
+  console.log(`🚀 BẮT ĐẦU: ${caseName}`);
+  console.log(`📂 Sandbox CWD: ${cwd}`);
+  console.log(`💬 User Prompt: ${userPrompt}`);
+  console.log(`${"=".repeat(60)}\n`);
+
+  // Setup files
+  await mkdir(cwd, { recursive: true });
+  for (const [relPath, content] of Object.entries(setupFiles)) {
+    const fullPath = path.resolve(cwd, relPath);
+    await mkdir(path.dirname(fullPath), { recursive: true });
+    await writeFile(fullPath, content, "utf8");
+  }
+
+  const messages: any[] = [
+    {
+      role: "system",
+      content: SYSTEM_PROMPT,
+    },
+    {
+      role: "user",
+      content: userPrompt,
+    },
+  ];
+
+  let turn = 0;
+  const maxTurns = 5;
+
+  while (turn < maxTurns) {
+    turn++;
+    console.log(`\n--- [Turn ${turn}] Gửi request tới llama-server ---`);
+
+    const payload = {
+      model: "qwen3.5-4b",
+      stream: false,
+      temperature: 0,
+      repeat_penalty: 1.0,
+      reasoning_control: true,
+      chat_template_kwargs: {
+        enable_thinking: true,
+      },
+      thinking_budget_tokens: 512,
+      max_tokens: 1500,
+      messages,
+      tools: TOOLS_SCHEMA,
+    };
+
+    const response = await fetch("http://localhost:3333/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`❌ HTTP Error ${response.status}: ${errText}`);
+      break;
+    }
+
+    const data = await response.json();
+    const choice = data.choices?.[0];
+    if (!choice) {
+      console.error("❌ Không nhận được choice từ model response.");
+      break;
+    }
+
+    const msg = choice.message;
+    if (msg.reasoning_content) {
+      console.log(`\n💭 [Suy nghĩ nội tâm / Reasoning]:\n${msg.reasoning_content.trim()}`);
+    }
+
+    if (msg.content) {
+      console.log(`\n🗣️ [Assistant Content]:\n${msg.content.trim()}`);
+    }
+
+    messages.push(msg);
+
+    if (!msg.tool_calls || msg.tool_calls.length === 0) {
+      console.log(`\n✅ Model đã kết thúc phản hồi (không gọi thêm tool).`);
+      break;
+    }
+
+    // Process tool calls
+    for (const toolCall of msg.tool_calls) {
+      const fnName = toolCall.function.name;
+      let fnArgs: any = {};
+      try {
+        fnArgs = JSON.parse(toolCall.function.arguments);
+      } catch (e) {
+        fnArgs = toolCall.function.arguments;
+      }
+
+      console.log(`\n🛠️ [Tool Call ID: ${toolCall.id}]`);
+      console.log(`   Tool: ${fnName}`);
+      console.log(`   Args:`, JSON.stringify(fnArgs, null, 2));
+
+      // Phân loại hành vi với text_editor
+      if (fnName === "text_editor") {
+        if (fnArgs.search_text !== undefined && fnArgs.replacement !== undefined) {
+          console.log(`   👉 HÀNH VI: [REPLACE - Targeted Edit (Sửa từng phần)]`);
+        } else if (fnArgs.search_text === undefined && fnArgs.replacement !== undefined) {
+          console.log(`   👉 HÀNH VI: [WRITE - Full Overwrite (Ghi đè toàn bộ)] ⚠️`);
+        } else if (fnArgs.search_text === undefined && fnArgs.replacement === undefined) {
+          console.log(`   👉 HÀNH VI: [READ - Read Entire File]`);
+        } else if (fnArgs.search_text !== undefined && fnArgs.replacement === undefined) {
+          console.log(`   👉 HÀNH VI: [SEARCH - Search in File]`);
+        }
+      }
+
+      let toolResult = "";
+      try {
+        if (fnName === "text_editor") {
+          toolResult = await executeTextEditor(cwd, fnArgs);
+        } else {
+          toolResult = JSON.stringify({ error: `Tool ${fnName} not mocked` });
+        }
+      } catch (err: any) {
+        toolResult = JSON.stringify({ error: err.message });
+      }
+
+      console.log(`   📥 [Tool Result Output]:\n   ${toolResult.slice(0, 300)}${toolResult.length > 300 ? "..." : ""}`);
+
+      messages.push({
+        role: "tool",
+        tool_call_id: toolCall.id,
+        name: fnName,
+        content: toolResult,
+      });
+    }
+  }
+}
+
+async function main() {
+  const rootDir = process.cwd();
+  const experiencesDir = path.resolve(rootDir, "experiences");
+
+  // CASE 1: Rõ ràng, chỉ thị trực tiếp
+  await runTestCase(
+    "CASE 1: Yêu cầu sửa đổi trực tiếp (Direct/Focused Edit)",
+    path.resolve(experiencesDir, "sandbox", "case1"),
+    "Trong file config.json, hãy sửa giá trị của max_connections từ 10 thành 50.",
+    {
+      "config.json": JSON.stringify(
+        {
+          app_name: "Order Processing Service",
+          port: 8080,
+          max_connections: 10,
+          timeout_ms: 30000,
+          debug_mode: true,
+        },
+        null,
+        2,
+      ),
+    },
+  );
+
+  // CASE 2: Nhiệm vụ nghiệp vụ, hút Attention vào logic (Task-Oriented)
+  await runTestCase(
+    "CASE 2: Nhiệm vụ nghiệp vụ cần tư duy logic (Task-Oriented Code Edit)",
+    path.resolve(experiencesDir, "sandbox", "case2"),
+    "Hãy kiểm tra file order_service.js và cập nhật logic: nếu khách hàng có customerTier là 'GOLD', tự động giảm giá 10% trên tổng tiền các món hàng trước khi tính phí ship.",
+    {
+      "order_service.js": `function calculateTotal(order) {
+  let itemsTotal = 0;
+  for (const item of order.items) {
+    itemsTotal += item.price * item.quantity;
+  }
+
+  let finalTotal = itemsTotal;
+
+  if (order.voucherCode === "FREESHIP") {
+    order.shippingFee = 0;
+  } else {
+    order.shippingFee = 30000;
+  }
+
+  finalTotal += order.shippingFee;
+  return finalTotal;
+}
+
+module.exports = { calculateTotal };`,
+    },
+  );
+}
+
+main().catch(console.error);

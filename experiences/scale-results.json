@@ -1,0 +1,311 @@
+[
+  {
+    "id": "A1",
+    "group": "A_DIRECT",
+    "title": "Sửa port máy chủ",
+    "turns": 2,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "A2",
+    "group": "A_DIRECT",
+    "title": "Sửa biến môi trường DB_HOST",
+    "turns": 2,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "A3",
+    "group": "A_DIRECT",
+    "title": "Sửa hằng số MAX_RETRIES",
+    "turns": 2,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "A4",
+    "group": "A_DIRECT",
+    "title": "Sửa version trong package_info.json",
+    "turns": 2,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "A5",
+    "group": "A_DIRECT",
+    "title": "Sửa theme giao diện",
+    "turns": 2,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "A6",
+    "group": "A_DIRECT",
+    "title": "Sửa thời hạn token",
+    "turns": 5,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 3,
+    "finalSuccess": false,
+    "actions": [
+      "REPLACE",
+      "REPLACE",
+      "REPLACE",
+      "READ_ALL",
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "A7",
+    "group": "A_DIRECT",
+    "title": "Sửa đơn vị tiền tệ",
+    "turns": 2,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "A8",
+    "group": "A_DIRECT",
+    "title": "Sửa default role",
+    "turns": 4,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 2,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE",
+      "REPLACE",
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "A9",
+    "group": "A_DIRECT",
+    "title": "Sửa API base path",
+    "turns": 5,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 2,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE",
+      "REPLACE",
+      "READ_ALL",
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "A10",
+    "group": "A_DIRECT",
+    "title": "Sửa cổng SMTP",
+    "turns": 2,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "B1",
+    "group": "B_TASK",
+    "title": "Thêm giảm giá khách VIP",
+    "turns": 5,
+    "usedReplace": false,
+    "usedWrite": true,
+    "usedReadAfterWrite": false,
+    "searchErrors": 1,
+    "finalSuccess": true,
+    "actions": [
+      "SEARCH",
+      "READ_ALL",
+      "WRITE_ALL",
+      "SEARCH"
+    ]
+  },
+  {
+    "id": "B2",
+    "group": "B_TASK",
+    "title": "Thêm kiểm tra miễn thuế VAT",
+    "turns": 3,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "SEARCH",
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "B3",
+    "group": "B_TASK",
+    "title": "Bổ sung validate độ dài password",
+    "turns": 5,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 1,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE",
+      "READ_ALL",
+      "REPLACE",
+      "READ_ALL"
+    ]
+  },
+  {
+    "id": "B4",
+    "group": "B_TASK",
+    "title": "Bổ sung kiểm tra tồn kho",
+    "turns": 5,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 1,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE",
+      "REPLACE",
+      "READ_ALL",
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "B5",
+    "group": "B_TASK",
+    "title": "Thêm bonus điểm cho chuỗi thắng",
+    "turns": 4,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 1,
+    "finalSuccess": true,
+    "actions": [
+      "SEARCH",
+      "READ_ALL",
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "B6",
+    "group": "B_TASK",
+    "title": "Phân hạng giới hạn Rate Limit",
+    "turns": 3,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "SEARCH",
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "B7",
+    "group": "B_TASK",
+    "title": "Tính phí giao hàng Express",
+    "turns": 4,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 1,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE",
+      "READ_ALL",
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "B8",
+    "group": "B_TASK",
+    "title": "Thêm kiểm tra trạng thái hoạt động",
+    "turns": 5,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 2,
+    "finalSuccess": false,
+    "actions": [
+      "REPLACE",
+      "REPLACE",
+      "READ_ALL",
+      "REPLACE",
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "B9",
+    "group": "B_TASK",
+    "title": "Xử lý xóa key hết hạn cache",
+    "turns": 2,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "REPLACE"
+    ]
+  },
+  {
+    "id": "B10",
+    "group": "B_TASK",
+    "title": "Thêm phí đóng gói đặc biệt",
+    "turns": 3,
+    "usedReplace": true,
+    "usedWrite": false,
+    "usedReadAfterWrite": false,
+    "searchErrors": 0,
+    "finalSuccess": true,
+    "actions": [
+      "SEARCH",
+      "REPLACE"
+    ]
+  }
+]
