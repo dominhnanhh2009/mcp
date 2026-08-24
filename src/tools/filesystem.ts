@@ -133,17 +133,18 @@ export const filesystemTools: ToolDefinition[] = [
       }
 
       const query = search_text as string;
-      const matches = rankMatches(original, query);
-      return {
-        success: true,
-        matches: matches
-          .filter((match) => matchPercentage(match, query.length) >= 90)
-          .slice(0, 3)
-          .map((match) => ({
-            match_percentage: matchPercentage(match, query.length),
-            review: reviewAround(original, match.start, match.end),
-          })),
-      };
+      const matches = rankMatches(original, query)
+        .filter((match) => matchPercentage(match, query.length) >= 90)
+        .slice(0, 3);
+      if (matches.length === 0) {
+        return "No matches found (>= 90% similarity).";
+      }
+      return matches
+        .map(
+          (match, i) =>
+            `[Match ${i + 1} - ${matchPercentage(match, query.length)}%]: ${reviewAround(original, match.start, match.end)}`,
+        )
+        .join("\n");
     },
   },
   {
@@ -166,7 +167,7 @@ export const filesystemTools: ToolDefinition[] = [
       );
       await mkdir(path.dirname(file), { recursive: true });
       await writeFile(file, normalizedContent, "utf8");
-      return { bytes_written: Buffer.byteLength(normalizedContent) };
+      return `Created file (${Buffer.byteLength(normalizedContent)} bytes written)`;
     },
   },
   {
@@ -217,15 +218,11 @@ export const filesystemTools: ToolDefinition[] = [
         normalizedReplacement +
         original.slice(match.end);
       await writeFile(file, updated, "utf8");
-      return {
-        success: true,
-        match_percentage: percentage,
-        review: reviewAround(
-          updated,
-          match.start,
-          match.start + normalizedReplacement.length,
-        ),
-      };
+      return `Updated file (${percentage}% match):\n${reviewAround(
+        updated,
+        match.start,
+        match.start + normalizedReplacement.length,
+      )}`;
     },
   },
 ];

@@ -37,9 +37,9 @@ export const computationalTools: ToolDefinition[] = [
         );
       }
       if (typeof value === "number" && !Number.isFinite(value)) {
-        return { result: String(value) };
+        return String(value);
       }
-      return { result: value };
+      return typeof value === "object" && value !== null ? value : String(value);
     },
   },
 ];

@@ -34,7 +34,7 @@ export async function startMemory(cwd: string, llamaServerUrl?: string): Promise
       handler: async ({ chunk }) => {
         const id = randomUUID();
         await store.remember(id, chunk as string, await embeddings.embed(chunk as string));
-        return { id };
+        return id;
       },
     },
     {
@@ -43,7 +43,7 @@ export async function startMemory(cwd: string, llamaServerUrl?: string): Promise
       inputSchema: { id: z.string().uuid() },
       handler: async ({ id }) => {
         await store.forget(id as string);
-        return { forgotten: true };
+        return "OK";
       },
     },
   ];

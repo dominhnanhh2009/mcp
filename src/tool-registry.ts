@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { ListToolsRequestSchema, type CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { ZodRawShape } from "zod";
 
 export interface ToolContext {
@@ -27,9 +27,16 @@ function isDirectResult(value: unknown): value is CallToolResult {
 }
 
 function asResult(value: unknown): CallToolResult {
+  if (value === undefined || value === null) {
+    return { content: [{ type: "text", text: "" }] };
+  }
   const text =
-    typeof value === "string" ? value : JSON.stringify(value, null, 2);
-  return { content: [{ type: "text", text: text ?? "null" }] };
+    typeof value === "string"
+      ? value
+      : typeof value === "number" || typeof value === "boolean" || typeof value === "bigint"
+        ? String(value)
+        : JSON.stringify(value);
+  return { content: [{ type: "text", text }] };
 }
 
 function asErrorResult(error: unknown): CallToolResult {
@@ -104,5 +111,35 @@ export function registerTools(
         }
       },
     );
+  }
+
+  // Strip "$schema" from all tool definitions in tools/list to avoid wasting LLM context tokens.
+  const protocol = server.server as unknown as {
+    _requestHandlers?: Map<
+      string,
+      (
+        request: unknown,
+        extra: unknown,
+      ) => Promise<{ tools: Array<{ inputSchema?: Record<string, unknown>; [key: string]: unknown }> }>
+    >;
+  };
+  const originalListHandler = protocol._requestHandlers?.get("tools/list");
+  if (originalListHandler) {
+    server.server.setRequestHandler(ListToolsRequestSchema, async (request, extra) => {
+      const result = await originalListHandler(request, extra);
+      if (result && Array.isArray(result.tools)) {
+        return {
+          ...result,
+          tools: result.tools.map((tool: { inputSchema?: Record<string, unknown>; [key: string]: unknown }) => {
+            if (tool.inputSchema) {
+              const { $schema, ...cleanSchema } = tool.inputSchema;
+              return { ...tool, inputSchema: cleanSchema };
+            }
+            return tool;
+          }),
+        };
+      }
+      return result;
+    });
   }
 }

@@ -143,22 +143,28 @@ test("lists all built-in tools", async () => {
     (tool) => tool.name === "read_file",
   )?.inputSchema as {
     required?: string[];
+    $schema?: string;
   };
   assert.deepEqual(readFileSchema.required, ["file"]);
+  assert.equal(readFileSchema.$schema, undefined);
 
   const createFileSchema = result.tools.find(
     (tool) => tool.name === "create_file",
   )?.inputSchema as {
     required?: string[];
+    $schema?: string;
   };
   assert.deepEqual(createFileSchema.required, ["file"]);
+  assert.equal(createFileSchema.$schema, undefined);
 
   const editFileSchema = result.tools.find(
     (tool) => tool.name === "edit_file",
   )?.inputSchema as {
     required?: string[];
+    $schema?: string;
   };
   assert.deepEqual(editFileSchema.required, ["file", "search_text", "replacement"]);
+  assert.equal(editFileSchema.$schema, undefined);
 
   assert.match(
     result.tools.find((tool) => tool.name === "js_calculator")?.description ?? "",
@@ -203,7 +209,7 @@ test("creates and reads a whole file through create_file and read_file", async (
   });
 
   assert.equal(await readFile(path.join(workspace, "notes/hello.txt"), "utf8"), "xin chào");
-  assert.deepEqual(JSON.parse(firstText(write)), { bytes_written: 9 });
+  assert.match(firstText(write), /Created file \(9 bytes written\)/);
   assert.equal(firstText(write).includes("notes/hello.txt"), false);
   assert.equal(firstText(write).includes("xin chào"), false);
   assert.equal(firstText(result), "xin chào");
@@ -268,10 +274,9 @@ test("finds case-insensitively and replaces one closest match", async () => {
     await readFile(path.join(workspace, "notes/search.txt"), "utf8"),
     "before the slow fox after",
   );
-  const response = JSON.parse(firstText(result));
-  assert.equal(response.success, true);
-  assert.ok(response.match_percentage >= 90);
-  assert.match(response.review, /the slow fox/);
+  const text = firstText(result);
+  assert.match(text, /Updated file \([\d.]+% match\)/);
+  assert.match(text, /the slow fox/);
 });
 
 test("edit_file does not edit ambiguous or low-confidence matches", async () => {
@@ -327,10 +332,9 @@ test("search mode does not duplicate overlapping matches for a single occurrence
       search_text: "longuniquepattern",
     },
   });
-  const response = JSON.parse(firstText(result));
-  assert.equal(response.success, true);
-  assert.equal(response.matches.length, 1);
-  assert.equal(response.matches[0].match_percentage, 100);
+  const text = firstText(result);
+  assert.match(text, /\[Match 1 - 100%\]/);
+  assert.match(text, /longuniquepattern/);
 });
 
 test("search mode returns up to three high-confidence matches", async () => {
@@ -346,14 +350,11 @@ test("search mode returns up to three high-confidence matches", async () => {
     name: "read_file",
     arguments: { file: "notes/matches.txt", search_text: "target" },
   });
-  const response = JSON.parse(firstText(result));
-  assert.equal(response.success, true);
-  assert.equal(response.matches.length, 3);
-  assert.ok(
-    response.matches.every(
-      (match: { match_percentage: number }) => match.match_percentage >= 90,
-    ),
-  );
+  const text = firstText(result);
+  assert.match(text, /\[Match 1 -/);
+  assert.match(text, /\[Match 2 -/);
+  assert.match(text, /\[Match 3 -/);
+  assert.equal(text.includes("[Match 4 -"), false);
 });
 
 test("treats WHOLE_FILE as ordinary searchable text", async () => {
@@ -372,9 +373,9 @@ test("treats WHOLE_FILE as ordinary searchable text", async () => {
       search_text: "WHOLE_FILE",
     },
   });
-  const response = JSON.parse(firstText(result));
-  assert.equal(response.matches[0].match_percentage, 100);
-  assert.match(response.matches[0].review, /WHOLE_FILE/);
+  const text = firstText(result);
+  assert.match(text, /\[Match 1 - 100%\]/);
+  assert.match(text, /WHOLE_FILE/);
 });
 
 test("edit_file normalizes typographic quotes only for JavaScript files", async () => {
@@ -415,7 +416,7 @@ test("runs JavaScript calculations without repeating the input", async () => {
     arguments: { expression },
   });
   const text = firstText(result);
-  assert.equal(JSON.parse(text).result, 1025);
+  assert.equal(text, "1025");
   assert.equal(text.includes(expression), false);
 });
 
@@ -428,7 +429,7 @@ test("normalizes typographic quotes in JavaScript", async () => {
     },
   });
 
-  assert.equal(JSON.parse(firstText(result)).result, "hello world");
+  assert.equal(firstText(result), "hello world");
 });
 
 test("supports standard JavaScript without math aliases", async () => {
@@ -439,13 +440,13 @@ test("supports standard JavaScript without math aliases", async () => {
         "function sumTo(n) { let sum = 0; for (let i = 1; i <= n; i++) sum += i; return sum; } sumTo(100)",
     },
   });
-  assert.equal(JSON.parse(firstText(result)).result, 5050);
+  assert.equal(firstText(result), "5050");
 
   const alias = await client.callTool({
     name: "js_calculator",
     arguments: { expression: "typeof sqrt" },
   });
-  assert.equal(JSON.parse(firstText(alias)).result, "undefined");
+  assert.equal(firstText(alias), "undefined");
 });
 
 test("explains how to fix an undefined JavaScript result", async () => {
@@ -481,7 +482,7 @@ test("runs commands and returns readable current time", async () => {
     name: "run_cmd",
     arguments: { command: "node -e \"process.stdout.write('ok')\"" },
   });
-  assert.equal(JSON.parse(firstText(command)).stdout, "ok");
+  assert.equal(firstText(command), "ok");
 
   const failedCommandText =
     "node -e \"process.stderr.write('unique failure'); process.exit(2)\"";
@@ -489,10 +490,10 @@ test("runs commands and returns readable current time", async () => {
     name: "run_cmd",
     arguments: { command: failedCommandText },
   });
-  const failed = JSON.parse(firstText(failedCommand));
-  assert.deepEqual(failed, { exit_code: 2, stderr: "unique failure" });
-  assert.equal(firstText(failedCommand).includes(failedCommandText), false);
-  assert.equal("error" in failed, false);
+  const failedText = firstText(failedCommand);
+  assert.match(failedText, /\[exit code: 2\]/);
+  assert.match(failedText, /unique failure/);
+  assert.equal(failedText.includes(failedCommandText), false);
 
   const time = await client.callTool({
     name: "get_current_time",

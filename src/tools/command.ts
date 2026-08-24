@@ -50,11 +50,13 @@ export const commandTools: ToolDefinition[] = [
           maxBuffer: 10 * 1024 * 1024,
           windowsHide: true,
         });
-        return {
-          exit_code: 0,
-          ...(stdout ? { stdout } : {}),
-          ...(stderr ? { stderr } : {}),
-        };
+        if (!stdout && !stderr) {
+          return "(empty output)";
+        }
+        if (stdout && stderr) {
+          return `${stdout}\n[stderr]:\n${stderr}`;
+        }
+        return stdout || stderr;
       } catch (error) {
         const result = error as Error & {
           code?: number | string;
@@ -62,24 +64,12 @@ export const commandTools: ToolDefinition[] = [
           stderr?: string;
           killed?: boolean;
         };
-        const exitCode =
-          typeof result.code === "number" ? result.code : null;
-        return {
-          exit_code: exitCode,
-          ...(typeof result.code === "string"
-            ? { error_code: result.code }
-            : {}),
-          ...(result.stdout ? { stdout: result.stdout } : {}),
-          ...(result.stderr ? { stderr: result.stderr } : {}),
-          ...(result.killed ? { killed: true } : {}),
-          ...(!result.stderr && !result.stdout
-            ? {
-                error: result.killed
-                  ? "Command timed out"
-                  : "Command execution failed without output",
-              }
-            : {}),
-        };
+        const exitCode = typeof result.code === "number" ? result.code : 1;
+        const detail =
+          result.stderr ||
+          result.stdout ||
+          (result.killed ? "Command timed out" : result.message);
+        return `[exit code: ${exitCode}]\n${detail}`;
       }
     },
   },
