@@ -1,0 +1,77 @@
+[
+  {
+    "id": "FULL_01",
+    "title": "FactorizedNumber (fact.js + test.js)",
+    "turns": 8,
+    "usedCreateCount": 2,
+    "usedEditCount": 2,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "CREATE_FILE ('fact.js')",
+      "CREATE_FILE ('test.js')",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('test.js') 🎯",
+      "RUN_CMD (\"node test.js\")",
+      "EDIT_FILE ('fact.js') 🎯",
+      "RUN_CMD (\"node test.js\")"
+    ]
+  },
+  {
+    "id": "FULL_02",
+    "title": "Math CJS to ESM (Existing 120-line file)",
+    "turns": 5,
+    "usedCreateCount": 0,
+    "usedEditCount": 1,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "RUN_CMD (\"node index.js\")",
+      "READ_FILE ('D:/DoMinhhAnhh/codes/mcp/experiences/sandbox/test_full_schema_split/full_02/math.js')",
+      "EDIT_FILE ('D:/DoMinhhAnhh/codes/mcp/experiences/sandbox/test_full_schema_split/full_02/math.js') 🎯",
+      "RUN_CMD (\"node index.js\")"
+    ]
+  },
+  {
+    "id": "FULL_03",
+    "title": "Server Export Syntax (Existing 80-line file)",
+    "turns": 3,
+    "usedCreateCount": 0,
+    "usedEditCount": 0,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "RUN_CMD (\"node app.js\")",
+      "READ_FILE ('server.js')"
+    ]
+  },
+  {
+    "id": "FULL_04",
+    "title": "Config CJS Require (Existing file)",
+    "turns": 5,
+    "usedCreateCount": 0,
+    "usedEditCount": 1,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "RUN_CMD (\"node main.js\")",
+      "READ_FILE ('D:/DoMinhhAnhh/codes/mcp/experiences/sandbox/test_full_schema_split/full_04/config.js')",
+      "EDIT_FILE ('D:/DoMinhhAnhh/codes/mcp/experiences/sandbox/test_full_schema_split/full_04/config.js') 🎯",
+      "RUN_CMD (\"node main.js\")"
+    ]
+  },
+  {
+    "id": "FULL_05",
+    "title": "Auth JWT Import (Existing file)",
+    "turns": 8,
+    "usedCreateCount": 0,
+    "usedEditCount": 2,
+    "attemptedOverwriteWithCreate": false,
+    "actions": [
+      "RUN_CMD (\"node auth_test.js\")",
+      "READ_FILE ('auth.js')",
+      "EDIT_FILE ('auth.js') 🎯",
+      "RUN_CMD (\"node auth_test.js\")",
+      "READ_FILE ('auth.js')",
+      "EDIT_FILE ('auth.js') 🎯",
+      "RUN_CMD (\"node auth_test.js\")",
+      "READ_FILE ('auth.js')"
+    ]
+  }
+]

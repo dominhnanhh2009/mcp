@@ -30,7 +30,7 @@ export const commandTools: ToolDefinition[] = [
     name: "run_cmd",
     description:
       `Run an unsandboxed command with ${shellDescription.name}. NEVER use this tool when another provided tool can perform the operation. Use it only when all other tools are unsuitable. ` +
-      "NEVER use shell file-reading or file-writing commands such as `cat file`, `echo text > file`, `echo text >> file`, or the `>>` redirection operator; use `text_editor` to read, create, or edit files instead. " +
+      "NEVER use shell file-reading or file-writing commands such as `cat file`, `echo text > file`, `echo text >> file`, or the `>>` redirection operator; use `read_file`, `create_file`, or `edit_file` instead. " +
       `Use it for shell-only operations such as ${shellDescription.examples}.`,
     inputSchema: {
       command: z.string().min(1).describe("Shell command to execute"),

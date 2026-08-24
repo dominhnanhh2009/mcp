@@ -114,40 +114,77 @@ function reviewAround(content: string, start: number, end: number): string {
 
 export const filesystemTools: ToolDefinition[] = [
   {
-    name: "text_editor",
+    name: "read_file",
     description:
-      "Read, create, search, and edit UTF-8 files. read {file}; search {file, search_text: content to search}; edit {file, search_text: old_text, replacement: new_text}; write {file, replacement: content to write}.",
+      "Read the UTF-8 text content of a file. Optionally include search_text to find snippets in the file.",
     inputSchema: {
-      file: z
-        .string()
-        .min(1)
-        .describe("Target file path"),
+      file: z.string().min(1).describe("Target file path to read"),
       search_text: z
         .string()
         .min(1)
         .optional()
-        .describe(
-          "Content to find in the file. Never put new file content here.",
-        ),
-      replacement: z
+        .describe("Optional snippet to search for in the file"),
+    },
+    handler: async ({ file: target, search_text }, { cwd }) => {
+      const file = resolvePath(cwd, target as string);
+      const original = await readFile(file, "utf8");
+      if (search_text === undefined) {
+        return original;
+      }
+
+      const query = search_text as string;
+      const matches = rankMatches(original, query);
+      return {
+        success: true,
+        matches: matches
+          .filter((match) => matchPercentage(match, query.length) >= 90)
+          .slice(0, 3)
+          .map((match) => ({
+            match_percentage: matchPercentage(match, query.length),
+            review: reviewAround(original, match.start, match.end),
+          })),
+      };
+    },
+  },
+  {
+    name: "create_file",
+    description:
+      "Create a new UTF-8 file with the given content. Use this tool ONLY when creating a new file.",
+    inputSchema: {
+      file: z.string().min(1).describe("Target file path to create"),
+      content: z
         .string()
         .optional()
-        .describe("Replacement text; do not include to read"),
+        .default("")
+        .describe("The full initial text content for the new file"),
+    },
+    handler: async ({ file: target, content = "" }, { cwd }) => {
+      const file = resolvePath(cwd, target as string);
+      const normalizedContent = normalizeJavaScriptQuotes(
+        file,
+        content as string,
+      );
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, normalizedContent, "utf8");
+      return { bytes_written: Buffer.byteLength(normalizedContent) };
+    },
+  },
+  {
+    name: "edit_file",
+    description:
+      "Edit an existing file by replacing a specific target snippet with new text. Use this tool to modify existing code.",
+    inputSchema: {
+      file: z.string().min(1).describe("Target file path to edit"),
+      search_text: z
+        .string()
+        .min(1)
+        .describe("Exact existing code snippet in the file to replace"),
+      replacement: z
+        .string()
+        .describe("New code snippet to replace search_text with"),
     },
     handler: async ({ file: target, search_text, replacement }, { cwd }) => {
       const file = resolvePath(cwd, target as string);
-      if (search_text === undefined) {
-        if (replacement === undefined) return readFile(file, "utf8");
-
-        const normalizedReplacement = normalizeJavaScriptQuotes(
-          file,
-          replacement as string,
-        );
-        await mkdir(path.dirname(file), { recursive: true });
-        await writeFile(file, normalizedReplacement, "utf8");
-        return { bytes_written: Buffer.byteLength(normalizedReplacement) };
-      }
-
       const query = search_text as string;
       const original = await readFile(file, "utf8");
       const matches = rankMatches(original, query);
@@ -159,18 +196,6 @@ export const filesystemTools: ToolDefinition[] = [
         throw new Error(
           `Best match is ${percentage}%, below the required 90%; no changes made`,
         );
-      }
-      if (replacement === undefined) {
-        return {
-          success: true,
-          matches: matches
-            .filter((match) => matchPercentage(match, query.length) >= 90)
-            .slice(0, 3)
-            .map((match) => ({
-              match_percentage: matchPercentage(match, query.length),
-              review: reviewAround(original, match.start, match.end),
-            })),
-        };
       }
 
       const tiedBest = matches.filter(
