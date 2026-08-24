@@ -12,7 +12,7 @@ export const computationalTools: ToolDefinition[] = [
   {
     name: "js_calculator",
     description:
-      "Evaluate JavaScript without Node.js APIs. Put the answer in the final expression, for example `\"hello\".toUpperCase()`. To return multiple values at once, combine them into an object (recommended), an array, or a string; for example `({ sum: 2 + 3, product: 2 * 3 })` or `const xs = [1, 2]; ({ doubled: xs.map(x => x * 2), count: xs.length })`. NEVER use console.log or top-level return.",
+      "Evaluate JavaScript without Node.js APIs. Put the answer in the final expression, for example `\"hello\".toUpperCase()`. To return multiple values, combine them into an object (recommended), an array, or a string; for example `({ sum: 2 + 3 })`. Wrap top-level objects in parentheses `({ ... })` to avoid syntax errors. NEVER use console.log or top-level return.",
     inputSchema: {
       expression: z
         .string()

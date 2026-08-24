@@ -17,9 +17,9 @@ const mimeTypes: Record<string, string> = {
 export const imageTools: ToolDefinition[] = [
   {
     name: "image_viewer",
-    description: "View an image file.",
+    description: "View a local image file.",
     inputSchema: {
-      file: z.string().min(1).describe("Image path"),
+      file: z.string().min(1).describe("Local image path"),
     },
     handler: async ({ file: target }, { cwd }) => {
       const file = path.isAbsolute(target as string)
