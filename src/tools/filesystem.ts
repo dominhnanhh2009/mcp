@@ -105,7 +105,7 @@ function matchPercentage(match: Match, queryLength: number): number {
 }
 
 function reviewAround(content: string, start: number, end: number): string {
-  const contextLength = 50;
+  const contextLength = 200;
   return content.slice(
     Math.max(0, start - contextLength),
     Math.min(content.length, end + contextLength),
@@ -116,7 +116,7 @@ export const filesystemTools: ToolDefinition[] = [
   {
     name: "read_file",
     description:
-      "Read the UTF-8 text content of a file. Optionally include search_text to find snippets in the file.",
+      "Read or search the UTF-8 text content of a file. Optionally include search_text to find snippets in the file.",
     inputSchema: {
       file: z.string().min(1).describe("Target file path to read"),
       search_text: z
@@ -179,7 +179,9 @@ export const filesystemTools: ToolDefinition[] = [
       search_text: z
         .string()
         .min(1)
-        .describe("Exact existing code snippet in the file to replace"),
+        .describe(
+          "Unique code snippet in the file to replace (fuzzy-matched; exact character precision is not required if sufficiently unique)",
+        ),
       replacement: z
         .string()
         .describe("New code snippet to replace search_text with"),
@@ -194,18 +196,30 @@ export const filesystemTools: ToolDefinition[] = [
         : 0;
 
       if (percentage < 90) {
-        throw new Error(
-          `Best match is ${percentage}%, below the required 90%; no changes made`,
-        );
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `Error: Best match is ${percentage}%, below the required 90%; no changes made`,
+            },
+          ],
+        };
       }
 
       const tiedBest = matches.filter(
         (match) => matchPercentage(match, query.length) === percentage,
       );
       if (tiedBest.length > 1) {
-        throw new Error(
-          `Found ${tiedBest.length} matches tied at ${percentage}%; no changes made`,
-        );
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `Error: Found ${tiedBest.length} matches tied at ${percentage}%; no changes made`,
+            },
+          ],
+        };
       }
 
       const match = matches[0]!;

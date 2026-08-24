@@ -26,7 +26,17 @@ export const imageTools: ToolDefinition[] = [
         ? path.normalize(target as string)
         : path.resolve(cwd, target as string);
       const mimeType = mimeTypes[path.extname(file).toLowerCase()];
-      if (!mimeType) throw new Error("Unsupported image format");
+      if (!mimeType) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `Error: Unsupported image format for file: ${path.basename(file)}`,
+            },
+          ],
+        };
+      }
 
       const data = await readFile(file);
       return {

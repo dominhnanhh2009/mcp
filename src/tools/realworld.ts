@@ -14,28 +14,40 @@ export const realworldTools: ToolDefinition[] = [
     handler: ({ timezone }) => {
       const now = new Date();
       const requestedZone = timezone as string | undefined;
-      const formatter = new Intl.DateTimeFormat("sv-SE", {
-        timeZone: requestedZone,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hourCycle: "h23",
-        timeZoneName: "longOffset",
-      });
-      const parts = Object.fromEntries(
-        formatter
-          .formatToParts(now)
-          .filter((part) => part.type !== "literal")
-          .map((part) => [part.type, part.value]),
-      );
-      const timeZoneName = parts.timeZoneName ?? "GMT";
-      const offset = timeZoneName === "GMT"
-        ? "Z"
-        : timeZoneName.replace("GMT", "");
-      return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}${offset}`;
+      try {
+        const formatter = new Intl.DateTimeFormat("sv-SE", {
+          timeZone: requestedZone,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hourCycle: "h23",
+          timeZoneName: "longOffset",
+        });
+        const parts = Object.fromEntries(
+          formatter
+            .formatToParts(now)
+            .filter((part) => part.type !== "literal")
+            .map((part) => [part.type, part.value]),
+        );
+        const timeZoneName = parts.timeZoneName ?? "GMT";
+        const offset = timeZoneName === "GMT"
+          ? "Z"
+          : timeZoneName.replace("GMT", "");
+        return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}${offset}`;
+      } catch (error) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `Error: Invalid timezone "${requestedZone}"`,
+            },
+          ],
+        };
+      }
     },
   },
 ];

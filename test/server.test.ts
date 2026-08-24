@@ -129,7 +129,7 @@ test("lists all built-in tools", async () => {
   );
   assert.match(
     result.tools.find((tool) => tool.name === "read_file")?.description ?? "",
-    /Read the UTF-8 text content of a file/,
+    /Read or search the UTF-8 text content of a file/,
   );
   assert.match(
     result.tools.find((tool) => tool.name === "create_file")?.description ?? "",
@@ -295,6 +295,8 @@ test("edit_file does not edit ambiguous or low-confidence matches", async () => 
   });
   assert.equal((tied as { isError?: boolean }).isError, true);
   assert.match(firstText(tied), /Found 2 matches/);
+  assert.equal(firstText(tied).includes("filesystem.ts"), false);
+  assert.equal(firstText(tied).includes("at async"), false);
   assert.equal(
     await readFile(path.join(workspace, "notes/ambiguous.txt"), "utf8"),
     ambiguous,
@@ -310,6 +312,8 @@ test("edit_file does not edit ambiguous or low-confidence matches", async () => 
   });
   assert.equal((low as { isError?: boolean }).isError, true);
   assert.match(firstText(low), /below the required 90%/);
+  assert.equal(firstText(low).includes("filesystem.ts"), false);
+  assert.equal(firstText(low).includes("at async"), false);
   assert.equal(
     await readFile(path.join(workspace, "notes/ambiguous.txt"), "utf8"),
     ambiguous,
