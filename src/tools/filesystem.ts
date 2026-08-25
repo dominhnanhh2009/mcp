@@ -27,7 +27,108 @@ function normalizeJavaScriptQuotes(file: string, content: string): string {
 
 type Match = { start: number; end: number; distance: number };
 
-function rankMatches(source: string, query: string): Match[] {
+function findExactMatches(source: string, query: string): Match[] {
+  const text = source.toLocaleLowerCase();
+  const pattern = query.toLocaleLowerCase();
+  const matches: Match[] = [];
+  let pos = 0;
+  while (pos < text.length) {
+    const idx = text.indexOf(pattern, pos);
+    if (idx === -1) break;
+    matches.push({
+      start: idx,
+      end: idx + pattern.length,
+      distance: 0,
+    });
+    pos = idx + 1;
+  }
+  return matches;
+}
+
+interface LineInfo {
+  text: string;
+  trimmed: string;
+  start: number;
+  end: number;
+}
+
+function getLineInfos(content: string): LineInfo[] {
+  const lines: LineInfo[] = [];
+  let start = 0;
+  const rawLines = content.split("\n");
+  for (let i = 0; i < rawLines.length; i++) {
+    const raw = rawLines[i]!;
+    const end = start + raw.length;
+    lines.push({
+      text: raw,
+      trimmed: raw.trim(),
+      start,
+      end,
+    });
+    start = end + 1;
+  }
+  return lines;
+}
+
+function findLineTrimmedMatches(source: string, query: string): Match[] {
+  const queryLines = getLineInfos(query).filter((l) => l.trimmed.length > 0);
+  if (queryLines.length === 0) {
+    return [];
+  }
+
+  const sourceLines = getLineInfos(source);
+  const nonEmptySourceIndices = sourceLines
+    .map((l, idx) => (l.trimmed.length > 0 ? idx : -1))
+    .filter((idx) => idx !== -1);
+
+  if (nonEmptySourceIndices.length < queryLines.length) {
+    return [];
+  }
+
+  const matches: Match[] = [];
+
+  for (let i = 0; i <= nonEmptySourceIndices.length - queryLines.length; i++) {
+    let matched = true;
+    for (let j = 0; j < queryLines.length; j++) {
+      const srcLineIdx = nonEmptySourceIndices[i + j]!;
+      if (
+        sourceLines[srcLineIdx]!.trimmed.toLowerCase() !==
+        queryLines[j]!.trimmed.toLowerCase()
+      ) {
+        matched = false;
+        break;
+      }
+    }
+
+    if (matched) {
+      const firstSrcLine = sourceLines[nonEmptySourceIndices[i]!]!;
+      const lastSrcLine =
+        sourceLines[nonEmptySourceIndices[i + queryLines.length - 1]!]!;
+
+      const leadingSpacesInFirstLine = firstSrcLine.text.indexOf(
+        firstSrcLine.trimmed,
+      );
+      const matchStart =
+        firstSrcLine.start +
+        (leadingSpacesInFirstLine >= 0 ? leadingSpacesInFirstLine : 0);
+
+      const trailingContentInLastLine =
+        lastSrcLine.text.lastIndexOf(lastSrcLine.trimmed) +
+        lastSrcLine.trimmed.length;
+      const matchEnd = lastSrcLine.start + trailingContentInLastLine;
+
+      matches.push({
+        start: matchStart,
+        end: matchEnd,
+        distance: 0,
+      });
+    }
+  }
+
+  return matches;
+}
+
+function rankFuzzyMatches(source: string, query: string): Match[] {
   const text = source.toLocaleLowerCase();
   const pattern = query.toLocaleLowerCase();
   const width = text.length + 1;
@@ -98,7 +199,24 @@ function rankMatches(source: string, query: string): Match[] {
   return nonOverlapping;
 }
 
+function rankMatches(source: string, query: string): Match[] {
+  const exact = findExactMatches(source, query);
+  if (exact.length > 0) {
+    return exact;
+  }
+
+  const lineTrimmed = findLineTrimmedMatches(source, query);
+  if (lineTrimmed.length > 0) {
+    return lineTrimmed;
+  }
+
+  return rankFuzzyMatches(source, query);
+}
+
 function matchPercentage(match: Match, queryLength: number): number {
+  if (match.distance === 0) {
+    return 100;
+  }
   const similarity =
     1 - match.distance / Math.max(queryLength, match.end - match.start);
   return Math.round(similarity * 10_000) / 100;
@@ -184,7 +302,7 @@ export const filesystemTools: ToolDefinition[] = [
         .string()
         .min(1)
         .describe(
-          "Unique code snippet in the file to replace (fuzzy-matched; exact character precision is not required if sufficiently unique)",
+          "Unique code snippet in the file to replace (fuzzy-matched; whitespace and indentation variations are handled automatically)",
         ),
       replacement: z
         .string()

@@ -280,6 +280,52 @@ test("finds case-insensitively and replaces one closest match", async () => {
   assert.match(text, /the slow fox/);
 });
 
+test("edit_file cleanly handles multi-line blocks with indentation differences without corrupting syntax", async () => {
+  const content = [
+    "  product(other) {",
+    "    let result = new FactorizedNumber(1);",
+    "    for (const prime in this.factors) {",
+    "      let exp = (this.factors[prime] || 0) + (other.factors[prime] || 0);",
+    "      // Nếu kết quả có số mũ là 0 thì skip để tiết kiệm dung lượng",
+    "      if (exp > 0) {",
+    "        result.factors[prime] = exp;",
+    "      }",
+    "    }",
+    "    return result;",
+    "  }",
+  ].join("\n");
+
+  await client.callTool({
+    name: "create_file",
+    arguments: { file: "fact.js", content },
+  });
+
+  const search_text = [
+    "// Nếu kết quả có số mũ là 0 thì skip để tiết kiệm dung lượng",
+    "if (exp > 0) {",
+    "      result.factors[prime] = exp;",
+    "    }",
+  ].join("\n");
+
+  const replacement = [
+    "// Nếu kết quả có số mũ là 0 thì skip để tiết kiệm dung lượng",
+    "if (exp != 0) {",
+    "      result.factors[prime] = exp;",
+    "    }",
+  ].join("\n");
+
+  const editResult = await client.callTool({
+    name: "edit_file",
+    arguments: { file: "fact.js", search_text, replacement },
+  });
+
+  const updated = await readFile(path.join(workspace, "fact.js"), "utf8");
+  assert.equal(firstText(editResult).includes("100% match"), true);
+  assert.equal(updated.includes("} }"), false);
+  assert.equal(updated.includes("if (exp != 0) {"), true);
+  assert.equal(updated.includes("return result;\n  }"), true);
+});
+
 test("edit_file does not edit ambiguous or low-confidence matches", async () => {
   const ambiguous = "repeat me / repeat me";
   await client.callTool({
