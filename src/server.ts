@@ -59,6 +59,7 @@ async function handleMcp(
         "Paths are relative to the server workspace unless absolute. " +
         "Use `create_file` to create new files, `edit_file` to modify existing files with targeted changes, and `read_file` to read files. Use `run_cmd` ONLY when no other tool can perform the operation. " +
         "For existing files, ALWAYS prefer `edit_file` to make targeted edits and preserve unrelated structure. " +
+        "After an edit, verify with the returned review; NEVER reread the whole file just to verify it. " +
         "Tool failures are returned as MCP error results.",
     },
   );

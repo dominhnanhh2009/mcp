@@ -104,8 +104,12 @@ function matchPercentage(match: Match, queryLength: number): number {
   return Math.round(similarity * 10_000) / 100;
 }
 
-function reviewAround(content: string, start: number, end: number): string {
-  const contextLength = 200;
+function reviewAround(
+  content: string,
+  start: number,
+  end: number,
+  contextLength = 50,
+): string {
   return content.slice(
     Math.max(0, start - contextLength),
     Math.min(content.length, end + contextLength),
@@ -142,7 +146,7 @@ export const filesystemTools: ToolDefinition[] = [
       return matches
         .map(
           (match, i) =>
-            `[Match ${i + 1} - ${matchPercentage(match, query.length)}%]: ${reviewAround(original, match.start, match.end)}`,
+            `[Match ${i + 1} - ${matchPercentage(match, query.length)}%]: ${reviewAround(original, match.start, match.end, 200)}`,
         )
         .join("\n");
     },
