@@ -6,9 +6,13 @@ import type { AppConfig } from "./config.js";
 import { registerTools } from "./tool-registry.js";
 import { tools, withAdditionalTools } from "./tools/index.js";
 import { startMemory, type MemoryRuntime } from "./memory/index.js";
+import { probeSdServer } from "./tools/sd-client.js";
+import { createGenImageTool } from "./tools/sd.js";
+
+import type { ToolDefinition } from "./tool-registry.js";
 
 export interface RunningServer extends ReturnType<typeof createServer> {
-  loadedTools: typeof tools;
+  loadedTools: ToolDefinition[];
   memory?: MemoryRuntime;
 }
 
@@ -47,8 +51,14 @@ async function handleMcp(
   request: IncomingMessage,
   response: ServerResponse,
   cwd: string,
-  loadedTools: typeof tools,
+  loadedTools: ToolDefinition[],
+  sdServerUrl?: string,
 ): Promise<void> {
+  const sdCapabilities = sdServerUrl ? await probeSdServer(sdServerUrl) : null;
+  const activeTools: ToolDefinition[] = sdCapabilities
+    ? [...loadedTools, createGenImageTool(sdServerUrl, sdCapabilities)]
+    : loadedTools;
+
   const mcp = new McpServer(
     {
       name: "minimal-node-mcp",
@@ -63,7 +73,7 @@ async function handleMcp(
         "Tool failures are returned as MCP error results.",
     },
   );
-  registerTools(mcp, loadedTools, { cwd });
+  registerTools(mcp, activeTools, { cwd });
 
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
@@ -96,12 +106,20 @@ export async function startServer(config: AppConfig) {
       }
 
       if (url.pathname === "/health" && request.method === "GET") {
+        const sdCapabilities = config.sdServerUrl
+          ? await probeSdServer(config.sdServerUrl)
+          : null;
+        const activeToolNames = [
+          ...loadedTools.map((tool) => tool.name),
+          ...(sdCapabilities ? ["gen_image"] : []),
+        ];
         json(response, 200, {
           status: "ok",
           endpoint: "/mcp",
           cwd: config.cwd,
-          tools: loadedTools.map((tool) => tool.name),
+          tools: activeToolNames,
           memory_model: memory?.model,
+          sd_model: sdCapabilities?.model?.name ?? null,
         });
         return;
       }
@@ -117,7 +135,7 @@ export async function startServer(config: AppConfig) {
         return;
       }
 
-      await handleMcp(request, response, config.cwd, loadedTools);
+      await handleMcp(request, response, config.cwd, loadedTools, config.sdServerUrl);
     } catch (error) {
       console.error(error);
       if (!response.headersSent) {

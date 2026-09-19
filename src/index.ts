@@ -19,7 +19,16 @@ if (config.llamaServerUrl) {
     ? `Memory model:       ${server.memory.model}`
     : "Memory tools:       disabled (no working embedding model found)");
 }
-console.log(`Loaded tools (${server.loadedTools.length}):`);
+if (config.sdServerUrl) {
+  const { probeSdServer } = await import("./tools/sd-client.js");
+  const sdCap = await probeSdServer(config.sdServerUrl);
+  console.log(
+    sdCap
+      ? `Stable Diffusion:   online (Model: ${sdCap.model?.name ?? "unknown"})`
+      : `Stable Diffusion:   offline (at ${config.sdServerUrl})`,
+  );
+}
+console.log(`Loaded base tools (${server.loadedTools.length}):`);
 for (const tool of server.loadedTools) {
   console.log(`  - ${tool.name}`);
 }

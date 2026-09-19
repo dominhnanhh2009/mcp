@@ -4,6 +4,7 @@ export interface AppConfig {
   port: number;
   cwd: string;
   llamaServerUrl?: string;
+  sdServerUrl?: string;
 }
 
 function defaultWorkspace(): string {
@@ -42,5 +43,6 @@ export function parseConfig(args = process.argv.slice(2)): AppConfig {
     port,
     cwd: cwdFlag ? path.resolve(process.cwd(), cwdFlag) : defaultWorkspace(),
     llamaServerUrl: readFlag(args, "--llama-server-url"),
+    sdServerUrl: readFlag(args, "--sd-server-url") ?? "http://127.0.0.1:4444",
   };
 }
