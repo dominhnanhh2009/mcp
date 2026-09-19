@@ -19,7 +19,7 @@ export const imageTools: ToolDefinition[] = [
     name: "image_viewer",
     description: "View a local image file.",
     inputSchema: {
-      file: z.string().min(1).describe("Local image path"),
+      file: z.string().min(1),
     },
     handler: async ({ file: target }, { cwd }) => {
       const file = path.isAbsolute(target as string)

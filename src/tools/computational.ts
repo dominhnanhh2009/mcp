@@ -14,12 +14,7 @@ export const computationalTools: ToolDefinition[] = [
     description:
       "Evaluate JavaScript without Node.js APIs. Put the answer in the final expression, for example `\"hello\".toUpperCase()`. To return multiple values, combine them into an object (recommended), an array, or a string; for example `({ sum: 2 + 3 })`. Wrap top-level objects in parentheses `({ ... })` to avoid syntax errors. NEVER use console.log or top-level return.",
     inputSchema: {
-      expression: z
-        .string()
-        .min(1)
-        .describe(
-          "JavaScript source whose final expression is the answer",
-        ),
+      expression: z.string().min(1),
     },
     handler: ({ expression }) => {
       const source = normalizeJavaScriptQuotes(expression as string);

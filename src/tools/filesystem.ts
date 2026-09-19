@@ -240,12 +240,8 @@ export const filesystemTools: ToolDefinition[] = [
     description:
       "Read or search the UTF-8 text content of a file. Optionally include search_text to find snippets in the file.",
     inputSchema: {
-      file: z.string().min(1).describe("Target file path to read"),
-      search_text: z
-        .string()
-        .min(1)
-        .optional()
-        .describe("Optional snippet to search for in the file"),
+      file: z.string().min(1),
+      search_text: z.string().min(1).optional(),
     },
     handler: async ({ file: target, search_text }, { cwd }) => {
       const file = resolvePath(cwd, target as string);
@@ -274,12 +270,8 @@ export const filesystemTools: ToolDefinition[] = [
     description:
       "Create a new UTF-8 file with the given content. Use this tool ONLY when creating a new file.",
     inputSchema: {
-      file: z.string().min(1).describe("Target file path to create"),
-      content: z
-        .string()
-        .optional()
-        .default("")
-        .describe("The full initial text content for the new file"),
+      file: z.string().min(1),
+      content: z.string().optional().default(""),
     },
     handler: async ({ file: target, content = "" }, { cwd }) => {
       const file = resolvePath(cwd, target as string);
@@ -297,16 +289,14 @@ export const filesystemTools: ToolDefinition[] = [
     description:
       "Edit an existing file by replacing a specific target snippet with new text. Use this tool to modify existing code.",
     inputSchema: {
-      file: z.string().min(1).describe("Target file path to edit"),
+      file: z.string().min(1),
       search_text: z
         .string()
         .min(1)
         .describe(
           "Unique code snippet in the file to replace (fuzzy-matched; whitespace and indentation variations are handled automatically)",
         ),
-      replacement: z
-        .string()
-        .describe("New code snippet to replace search_text with"),
+      replacement: z.string(),
     },
     handler: async ({ file: target, search_text, replacement }, { cwd }) => {
       const file = resolvePath(cwd, target as string);

@@ -33,14 +33,13 @@ export const commandTools: ToolDefinition[] = [
       "NEVER use shell file-reading or file-writing commands such as `cat file`, `echo text > file`, `echo text >> file`, or the `>>` redirection operator; use `read_file`, `create_file`, or `edit_file` instead. " +
       `Use it for shell-only operations such as ${shellDescription.examples}.`,
     inputSchema: {
-      command: z.string().min(1).describe("Shell command to execute"),
+      command: z.string().min(1),
       timeout_ms: z
         .number()
         .int()
         .positive()
         .max(300_000)
-        .default(30_000)
-        .describe("Maximum run time in milliseconds"),
+        .default(30_000),
     },
     handler: async ({ command, timeout_ms }, { cwd }) => {
       try {
