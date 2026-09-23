@@ -20,13 +20,31 @@ if (config.llamaServerUrl) {
     : "Memory tools:       disabled (no working embedding model found)");
 }
 if (config.sdServerUrl) {
-  const { probeSdServer } = await import("./tools/sd-client.js");
+  const { probeSdServer, detectLcmLora } = await import("./tools/sd-client.js");
   const sdCap = await probeSdServer(config.sdServerUrl);
-  console.log(
-    sdCap
-      ? `Stable Diffusion:   online (Model: ${sdCap.model?.name ?? "unknown"})`
-      : `Stable Diffusion:   offline (at ${config.sdServerUrl})`,
-  );
+  if (!sdCap) {
+    console.log(`Stable Diffusion:   offline (at ${config.sdServerUrl})`);
+  } else {
+    const lcmLora = detectLcmLora(sdCap);
+    const loraName = lcmLora?.name || lcmLora?.path;
+    if (lcmLora && loraName) {
+      console.warn(
+        "\n************************************************************\n" +
+          "*** WARNING: LCM LORA DETECTION IS HEURISTIC             ***\n" +
+          `*** Picked LoRA: "${loraName}"\n` +
+          "*** Substring match 'lcm' is very prone to false         ***\n" +
+          "*** positives. Please verify your selected LoRA!         ***\n" +
+          "************************************************************\n",
+      );
+      console.log(
+        `Stable Diffusion:   online (Model: ${sdCap.model?.name ?? "unknown"}, LoRA: ${loraName})`,
+      );
+    } else {
+      console.log(
+        `Stable Diffusion:   online (Model: ${sdCap.model?.name ?? "unknown"}) - gen_image disabled (no LoRA matching 'lcm' found)`,
+      );
+    }
+  }
 }
 console.log(`Loaded base tools (${server.loadedTools.length}):`);
 for (const tool of server.loadedTools) {

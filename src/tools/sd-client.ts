@@ -19,11 +19,28 @@ export interface SdCapabilities {
     max_queue_size?: number;
   };
   defaults_by_mode?: Record<string, unknown>;
+  loras?: Array<{ name?: string; path?: string }>;
+}
+
+export function detectLcmLora(
+  capabilities?: SdCapabilities | null,
+): { name?: string; path?: string } | null {
+  if (!capabilities?.loras || !Array.isArray(capabilities.loras)) {
+    return null;
+  }
+  for (const lora of capabilities.loras) {
+    const target = `${lora.name ?? ""} ${lora.path ?? ""}`.toLowerCase();
+    if (target.includes("lcm")) {
+      return lora;
+    }
+  }
+  return null;
 }
 
 export interface ImgGenRequest {
   prompt: string;
   negative_prompt?: string;
+  lora?: Array<{ path: string; multiplier?: number }>;
   width?: number;
   height?: number;
   clip_skip?: number;

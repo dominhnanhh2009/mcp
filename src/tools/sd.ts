@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   DEFAULT_SD_SERVER_URL,
+  detectLcmLora,
   pollJob,
   submitImgGen,
   type ImgGenRequest,
@@ -17,15 +18,8 @@ export const genImageInputSchema = {
   height: z.number().int().positive().optional().default(512),
   seed: z.number().int().optional().default(-1),
   batch_count: z.number().int().min(1).max(8).optional().default(1),
-  sampling: z
-    .object({
-      scheduler: z.string().optional().default("discrete"),
-      method: z.string().optional().default("euler_a"),
-      steps: z.number().int().min(1).max(150).optional().default(20),
-    })
-    .optional()
-    .default({ scheduler: "discrete", method: "euler_a", steps: 20 }),
-  cfg: z.number().positive().optional().default(7.0),
+  steps: z.number().int().min(1).max(150).optional().default(4),
+  cfg: z.number().positive().optional().default(1.0),
   clip_skip: z.number().int().optional().default(-1),
   output_file: z.string().optional(),
 };
@@ -35,7 +29,7 @@ export function buildSdToolDescription(capabilities?: SdCapabilities | null): st
   const isSd15 = /sd1[._-]?5|v1[._-]?5|realistic|meina/i.test(modelName);
   const baseType = isSd15 ? "SD1.5" : "Stable Diffusion";
 
-  return `Generate images using local Stable Diffusion (Model: ${modelName}, Base: ${baseType}). Built-in full VAE tiling enabled. Automatically saves generated images to workspace and returns base64 image content.`;
+  return `Generate images using local Stable Diffusion (Model: ${modelName}, Base: ${baseType}, LCM accelerated). Built-in full VAE tiling enabled. Automatically saves generated images to workspace and returns base64 image content.`;
 }
 
 function generateTimestamp(): string {
@@ -48,6 +42,8 @@ export function createGenImageTool(
   sdServerUrl = DEFAULT_SD_SERVER_URL,
   capabilities?: SdCapabilities | null,
 ): ToolDefinition {
+  const lcmLora = detectLcmLora(capabilities);
+
   return {
     name: "gen_image",
     title: "Generate Image",
@@ -55,36 +51,33 @@ export function createGenImageTool(
     inputSchema: genImageInputSchema,
     handler: async (input, context) => {
       const prompt = input.prompt as string;
-      const negprompt = (input.negprompt as string) || "";
+      const userNeg = ((input.negprompt as string) || "").trim();
+      const negative_prompt = userNeg
+        ? `easynegative, negative_hand-neg, ${userNeg}`
+        : "easynegative, negative_hand-neg";
+
       const width = Number(input.width ?? 512);
       const height = Number(input.height ?? 512);
       const seed = Number(input.seed ?? -1);
       const batch_count = Number(input.batch_count ?? 1);
-      const cfg = Number(input.cfg ?? 7.0);
+      const steps = Number(input.steps ?? 4);
+      const cfg = Number(input.cfg ?? 1.0);
       const clip_skip = Number(input.clip_skip ?? -1);
       const customOutputFile = input.output_file as string | undefined;
 
-      const sampling = (input.sampling ?? {}) as {
-        scheduler?: string;
-        method?: string;
-        steps?: number;
-      };
-      const scheduler = sampling.scheduler || "discrete";
-      const sample_method = sampling.method || "euler_a";
-      const sample_steps = Number(sampling.steps ?? 20);
-
       const requestPayload: ImgGenRequest = {
         prompt,
-        negative_prompt: negprompt,
+        negative_prompt,
         width,
         height,
         seed,
         batch_count,
         clip_skip,
+        ...(lcmLora ? { lora: [{ path: lcmLora.path || lcmLora.name || "", multiplier: 1.0 }] } : {}),
         sample_params: {
-          scheduler,
-          sample_method,
-          sample_steps,
+          scheduler: "lcm",
+          sample_method: "lcm",
+          sample_steps: steps,
           guidance: {
             txt_cfg: cfg,
           },

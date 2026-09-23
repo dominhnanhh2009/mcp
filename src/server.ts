@@ -6,7 +6,7 @@ import type { AppConfig } from "./config.js";
 import { registerTools } from "./tool-registry.js";
 import { tools, withAdditionalTools } from "./tools/index.js";
 import { startMemory, type MemoryRuntime } from "./memory/index.js";
-import { probeSdServer } from "./tools/sd-client.js";
+import { probeSdServer, detectLcmLora } from "./tools/sd-client.js";
 import { createGenImageTool } from "./tools/sd.js";
 
 import type { ToolDefinition } from "./tool-registry.js";
@@ -55,9 +55,11 @@ async function handleMcp(
   sdServerUrl?: string,
 ): Promise<void> {
   const sdCapabilities = sdServerUrl ? await probeSdServer(sdServerUrl) : null;
-  const activeTools: ToolDefinition[] = sdCapabilities
-    ? [...loadedTools, createGenImageTool(sdServerUrl, sdCapabilities)]
-    : loadedTools;
+  const lcmLora = detectLcmLora(sdCapabilities);
+  const activeTools: ToolDefinition[] =
+    sdCapabilities && lcmLora
+      ? [...loadedTools, createGenImageTool(sdServerUrl, sdCapabilities)]
+      : loadedTools;
 
   const mcp = new McpServer(
     {
@@ -109,9 +111,10 @@ export async function startServer(config: AppConfig) {
         const sdCapabilities = config.sdServerUrl
           ? await probeSdServer(config.sdServerUrl)
           : null;
+        const lcmLora = detectLcmLora(sdCapabilities);
         const activeToolNames = [
           ...loadedTools.map((tool) => tool.name),
-          ...(sdCapabilities ? ["gen_image"] : []),
+          ...(sdCapabilities && lcmLora ? ["gen_image"] : []),
         ];
         json(response, 200, {
           status: "ok",
@@ -120,6 +123,7 @@ export async function startServer(config: AppConfig) {
           tools: activeToolNames,
           memory_model: memory?.model,
           sd_model: sdCapabilities?.model?.name ?? null,
+          sd_lora: lcmLora?.name ?? lcmLora?.path ?? null,
         });
         return;
       }
